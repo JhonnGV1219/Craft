@@ -1,0 +1,45 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+<br><br><br><br><br>
+<div class="container">
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            <h1>Editar Subcontratista</h1>
+            <hr>
+            <form action="/procesoupsubcontratista/" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="id" value="{{ s.id_subcontratista }}">
+
+                <b>Empresa:</b>
+                <input type="text" name="empresa" class="form-control mb-2" value="{{ s.nombre_empresa }}" required>
+
+                <b>Especialidad:</b>
+                <input type="text" name="especialidad" class="form-control mb-2" value="{{ s.especialidad }}" required>
+
+                <b>Teléfono:</b>
+                <input type="text" name="telefono" class="form-control mb-2" value="{{ s.telefono }}" required>
+
+                <b>Email:</b>
+                <input type="email" name="email" class="form-control mb-2" value="{{ s.email }}" required>
+
+                <b>Obra:</b>
+                <select name="obra" class="form-control mb-2">
+                    {% for o in obras %}
+                    <option value="{{ o.id_obra }}" {% if o.id_obra == s.obra_id.id_obra %}selected{% endif %}>
+                        {{ o.nombre_obra }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <br>
+                <div class="text-center">
+                    <button class="btn btn-success"><i class="bi bi-check-circle"></i> Actualizar</button>
+                    <a href="/showsubcontratista/" class="btn btn-danger"><i class="bi bi-x-circle"></i> Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<br><br><br>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+<br><br><br><br><br>
+<div class="container">
+    <div class="row">
+        <div class="col-md-3"></div>
+
+        <div class="col-md-6">
+            <h1>Editar Material</h1>
+            <hr>
+
+            <form action="/procesoupmaterial/" method="POST">
+                {% csrf_token %}
+
+                <input type="hidden" name="id" value="{{ m.id_material }}">
+
+                <b>Nombre:</b>
+                <input type="text" name="nombre" class="form-control" value="{{ m.nombre }}">
+
+                <b>Unidad:</b>
+                <input type="text" name="unidad" class="form-control" value="{{ m.unidad }}">
+
+                <br>
+                <div class="text-center">
+                    <button class="btn btn-success">Actualizar</button>
+                    <a href="/showmaterial/" class="btn btn-danger">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

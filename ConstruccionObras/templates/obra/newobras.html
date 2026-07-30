@@ -1,0 +1,99 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% load static %}
+{% block contenido %}
+<br><br><br><br><br>
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+          <h5 class="mb-0"><i class="bi bi-building-add me-2"></i>Registro de Nueva Obra</h5>
+        </div>
+        <div class="card-body p-4">
+
+          <form enctype="multipart/form-data" action="/guardar_obra/"
+                method="post" id="form_nueva_obra">
+            {% csrf_token %}
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label fw-semibold">Nombre de la Obra</label>
+                <input type="text" name="nombre" class="form-control"
+                       placeholder="Ej: Construcción Puente Río Verde" required>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Descripción</label>
+                <textarea name="descripcion" class="form-control" rows="2"
+                          placeholder="Descripción general de la obra" required></textarea>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Fecha de Inicio</label>
+                <input type="date" name="fecha_in" class="form-control" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Fecha Fin Estimada</label>
+                <input type="date" name="fecha_fin" class="form-control" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Presupuesto Total ($)</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input type="number" name="presupuesto" class="form-control"
+                         placeholder="0.00" step="0.01" min="0">
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Estado</label>
+                <select name="estado" class="form-select">
+                  <option value="Planificada">Planificada</option>
+                  <option value="En ejecucion">En Ejecución</option>
+                  <option value="Finalizada">Finalizada</option>
+                  <option value="Suspendida">Suspendida</option>
+                </select>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Plano (PDF)</label>
+                <input type="file" name="plano" id="plano" class="form-control">
+              </div>
+            </div>
+
+            <hr>
+            <div class="d-flex justify-content-end gap-2">
+              <a href="/showobras/" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+              </a>
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Guardar Obra
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<br><br>
+
+<script>
+$("#plano").fileinput({
+  language: "es",
+  allowedFileExtensions: ["pdf"],
+  showCaption: false,
+  dropZoneEnabled: true,
+  showClose: false,
+  showUpload: false,
+  initialPreviewFileType: "pdf"
+});
+$(".fileinput-upload").hide();
+</script>
+{% endblock %}

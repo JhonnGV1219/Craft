@@ -1,0 +1,227 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+
+<br><br><br><br><br>
+
+<div class="container-fluid px-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0"><i class="bi bi-journal-richtext me-2"></i>Registro de Avances por Obra</h2>
+            <small class="text-muted">Progreso real, subcontratistas y bitácora por obra</small>
+        </div>
+        <div>
+            <a href="/newavance/" class="btn btn-success btn-sm">
+                <i class="bi bi-plus-circle"></i> Nuevo Avance
+            </a>
+            <a href="/dashboard/" class="btn btn-outline-primary btn-sm ms-2">
+                <i class="bi bi-bar-chart-line"></i> Dashboard
+            </a>
+        </div>
+    </div>
+    <hr class="mt-0 mb-4">
+
+    {% for item in resumen %}
+    <div class="card shadow-sm mb-4 border-0">
+
+        <!-- ── Cabecera obra ── -->
+        <div class="card-header d-flex justify-content-between align-items-center
+            {% if item.obra.estado == 'En ejecucion' %}bg-warning text-dark
+            {% elif item.obra.estado == 'Finalizada'  %}bg-success text-white
+            {% elif item.obra.estado == 'Suspendida'  %}bg-danger  text-white
+            {% else %}bg-dark text-white{% endif %}">
+            <div>
+                <i class="bi bi-building me-1"></i>
+                <strong>{{ item.obra.nombre_obra }}</strong>
+                <span class="badge bg-light text-dark ms-2">{{ item.obra.estado }}</span>
+            </div>
+            <small>{{ item.obra.fecha_inicio }} → {{ item.obra.fecha_fin_estimado }}</small>
+        </div>
+
+        <div class="card-body pb-2">
+
+            <!-- ── Fila de métricas ── -->
+            <div class="row g-3 mb-3">
+
+                <!-- Avance de bitácora (registros diarios) -->
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded h-100">
+                        <p class="mb-1 small fw-semibold text-muted">
+                            <i class="bi bi-journal-check me-1"></i>Avance de Bitácora (registros)
+                        </p>
+                        <div class="progress mb-1" style="height:20px;">
+                            <div class="progress-bar
+                                {% if item.avance_registros >= 75 %}bg-success
+                                {% elif item.avance_registros >= 40 %}bg-warning
+                                {% else %}bg-danger{% endif %}"
+                                role="progressbar"
+                                style="width:{{ item.avance_registros }}%;"
+                                aria-valuenow="{{ item.avance_registros }}"
+                                aria-valuemin="0" aria-valuemax="100">
+                                {{ item.avance_registros }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Promedio de {{ item.total_registros }} registros diarios</small>
+                    </div>
+                </div>
+
+                <!-- Avance de hitos (porcentaje asignado) -->
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded h-100">
+                        <p class="mb-1 small fw-semibold text-muted">
+                            <i class="bi bi-flag me-1"></i>Avance por Hitos (planificado)
+                        </p>
+                        <div class="progress mb-1" style="height:20px;">
+                            <div class="progress-bar bg-primary"
+                                role="progressbar"
+                                style="width:{{ item.avance_hitos }}%;"
+                                aria-valuenow="{{ item.avance_hitos }}"
+                                aria-valuemin="0" aria-valuemax="100">
+                                {{ item.avance_hitos }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Promedio de {{ item.hitos|length }} hito(s)</small>
+                    </div>
+                </div>
+
+                <!-- Contadores rápidos -->
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded h-100 d-flex flex-column justify-content-center">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <span class="badge bg-secondary fs-6">
+                                <i class="bi bi-flag"></i> {{ item.hitos|length }} hitos
+                            </span>
+                            <span class="badge bg-primary fs-6">
+                                <i class="bi bi-journal-text"></i> {{ item.total_registros }} registros
+                            </span>
+                            <span class="badge bg-dark fs-6">
+                                <i class="bi bi-people"></i> {{ item.subcontratistas|length }} subcontratistas
+                            </span>
+                        </div>
+                        <div class="mt-2">
+                            <a href="/registro/obra/{{ item.obra.id_obra }}"
+                               class="btn btn-outline-dark btn-sm w-100">
+                                <i class="bi bi-eye"></i> Ver detalle completo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Subcontratistas de esta obra ── -->
+            {% if item.subcontratistas %}
+            <h6 class="text-muted mb-2 mt-1">
+                <i class="bi bi-people-fill me-1"></i>Subcontratistas asignados
+            </h6>
+            <div class="table-responsive mb-3">
+                <table class="table table-sm table-bordered table-hover mb-0">
+                    <thead class="table-dark text-center">
+                        <tr>
+                            <th>Empresa</th>
+                            <th>Especialidad</th>
+                            <th>Teléfono</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in item.subcontratistas %}
+                        <tr>
+                            <td class="fw-semibold">{{ s.nombre_empresa }}</td>
+                            <td>{{ s.especialidad }}</td>
+                            <td>{{ s.telefono }}</td>
+                            <td><a href="mailto:{{ s.email }}">{{ s.email }}</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-3">
+                <i class="bi bi-person-x"></i> Sin subcontratistas asignados.
+                <a href="/newsubcontratista/">Agregar</a>
+            </p>
+            {% endif %}
+
+            <!-- ── Últimos 5 registros ── -->
+            {% if item.registros %}
+            <h6 class="text-muted mb-2">
+                <i class="bi bi-clock-history me-1"></i>Últimos registros de avance
+            </h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover mb-0">
+                    <thead class="table-dark text-center">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hito</th>
+                            <th>Avance</th>
+                            <th>Reporte</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in item.registros|slice:":5" %}
+                        <tr>
+                            <td class="text-center">{{ r.fecha }}</td>
+                            <td>{{ r.hito_id.nombre_hito }}</td>
+                            <td style="width:160px;">
+                                <div class="progress" style="height:16px;">
+                                    <div class="progress-bar
+                                        {% if r.avance >= 75 %}bg-success
+                                        {% elif r.avance >= 40 %}bg-warning
+                                        {% else %}bg-danger{% endif %}"
+                                        style="width:{{ r.avance }}%;">
+                                        {{ r.avance }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                {% if r.reporte %}
+                                    <a href="{{ r.reporte.url }}" target="_blank"
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center" style="white-space:nowrap;">
+                                <a href="/updateavance/{{ r.id_registro }}"
+                                   class="btn btn-warning btn-sm">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="/deleteavance/{{ r.id_registro }}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="confirmacion(event, this.href)">
+                                    <i class="bi bi-trash3"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if item.total_registros > 5 %}
+            <div class="text-end mt-1">
+                <a href="/registro/obra/{{ item.obra.id_obra }}" class="small text-primary">
+                    Ver los {{ item.total_registros }} registros completos →
+                </a>
+            </div>
+            {% endif %}
+            {% else %}
+            <p class="text-muted text-center py-2">
+                <i class="bi bi-inbox"></i> Sin registros de avance.
+                <a href="/newavance/">Registrar el primero</a>
+            </p>
+            {% endif %}
+
+        </div><!-- /card-body -->
+    </div><!-- /card -->
+    {% empty %}
+    <div class="alert alert-info text-center">
+        No hay obras registradas. <a href="/newobras/">Registra una obra</a> para comenzar.
+    </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

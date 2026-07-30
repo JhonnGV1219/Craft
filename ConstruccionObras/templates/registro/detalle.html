@@ -1,0 +1,314 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+
+<br><br><br><br><br>
+
+<div class="container-fluid px-4">
+
+    <!-- Cabecera de la obra -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <h1 class="mb-0">
+                <i class="bi bi-building"></i> {{ obra.nombre_obra }}
+            </h1>
+            <span class="badge
+                {% if obra.estado == 'En ejecucion' %}bg-warning text-dark
+                {% elif obra.estado == 'Finalizada' %}bg-success
+                {% elif obra.estado == 'Suspendida' %}bg-danger
+                {% else %}bg-secondary{% endif %} fs-6">
+                {{ obra.estado }}
+            </span>
+            <small class="text-muted ms-2">
+                {{ obra.fecha_inicio }} → {{ obra.fecha_fin_estimado }}
+            </small>
+        </div>
+        <div>
+            <a href="/registro/" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Volver al resumen
+            </a>
+            <a href="/newavance/" class="btn btn-success btn-sm ms-1">
+                <i class="bi bi-plus-circle"></i> Nuevo Avance
+            </a>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- ── Métricas de avance ── -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 bg-light h-100">
+                <div class="card-body">
+                    <p class="small fw-semibold text-muted mb-1">
+                        <i class="bi bi-journal-check me-1"></i>Avance de Bitácora (registros diarios)
+                    </p>
+                    <div class="progress" style="height:22px;">
+                        <div class="progress-bar
+                            {% if avance_registros >= 75 %}bg-success
+                            {% elif avance_registros >= 40 %}bg-warning
+                            {% else %}bg-danger{% endif %}"
+                            style="width:{{ avance_registros }}%;">
+                            {{ avance_registros }}%
+                        </div>
+                    </div>
+                    <small class="text-muted">Promedio de todos los registros</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-light h-100">
+                <div class="card-body">
+                    <p class="small fw-semibold text-muted mb-1">
+                        <i class="bi bi-flag me-1"></i>Avance por Hitos (planificado)
+                    </p>
+                    <div class="progress" style="height:22px;">
+                        <div class="progress-bar bg-primary"
+                            style="width:{{ avance_hitos }}%;">
+                            {{ avance_hitos }}%
+                        </div>
+                    </div>
+                    <small class="text-muted">Promedio de porcentajes asignados a hitos</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-light h-100">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <p class="small fw-semibold text-muted mb-2">
+                        <i class="bi bi-info-circle me-1"></i>Resumen
+                    </p>
+                    <span class="badge bg-secondary mb-1">
+                        <i class="bi bi-flag"></i> {{ hitos|length }} hito(s)
+                    </span>
+                    <span class="badge bg-primary mb-1">
+                        <i class="bi bi-journal-text"></i> {{ registros|length }} registros
+                    </span>
+                    <span class="badge bg-dark">
+                        <i class="bi bi-people"></i> {{ subcontratistas|length }} subcontratista(s)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Subcontratistas ── -->
+    {% if subcontratistas %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+            <i class="bi bi-people-fill me-1"></i> Subcontratistas de esta Obra
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-secondary text-center">
+                    <tr>
+                        <th>Empresa</th>
+                        <th>Especialidad</th>
+                        <th>Teléfono</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in subcontratistas %}
+                    <tr>
+                        <td class="fw-semibold">{{ s.nombre_empresa }}</td>
+                        <td>{{ s.especialidad }}</td>
+                        <td>{{ s.telefono }}</td>
+                        <td><a href="mailto:{{ s.email }}">{{ s.email }}</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row mb-4">
+
+        <!-- Gráfico de evolución de avance por hito -->
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <i class="bi bi-graph-up"></i> Evolución de Avance por Hito
+                </div>
+                <div class="card-body">
+                    <canvas id="chartDetalleAvance" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado de hitos -->
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <i class="bi bi-flag-fill"></i> Hitos de la Obra
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-secondary text-center">
+                            <tr>
+                                <th>Hito</th>
+                                <th>Estado</th>
+                                <th>Avance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in hitos %}
+                            <tr>
+                                <td>{{ h.nombre_hito }}</td>
+                                <td class="text-center">
+                                    <span class="badge
+                                        {% if h.estado == 'Completado' %}bg-success
+                                        {% elif h.estado == 'En progreso' %}bg-warning text-dark
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ h.estado }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height:14px;">
+                                        <div class="progress-bar
+                                            {% if h.avance_porcentaje >= 75 %}bg-success
+                                            {% elif h.avance_porcentaje >= 40 %}bg-warning
+                                            {% else %}bg-danger{% endif %}"
+                                            style="width:{{ h.avance_porcentaje|default:0 }}%;">
+                                            {{ h.avance_porcentaje|default:0 }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center text-muted">Sin hitos</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla completa de registros -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-dark text-white">
+            <i class="bi bi-journal-text"></i> Bitácora completa de avances — {{ registros|length }} registros
+        </div>
+        <div class="card-body">
+            <table id="tbl_detalle_avances" class="table table-sm table-striped table-bordered table-hover">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Hito</th>
+                        <th>Avance (%)</th>
+                        <th>Reporte</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in registros %}
+                    <tr>
+                        <td class="text-center">{{ r.fecha }}</td>
+                        <td>{{ r.hito_id.nombre_hito }}</td>
+                        <td class="text-center">
+                            <div class="progress" style="height:18px;">
+                                <div class="progress-bar
+                                    {% if r.avance >= 75 %}bg-success
+                                    {% elif r.avance >= 40 %}bg-warning
+                                    {% else %}bg-danger{% endif %}"
+                                    style="width:{{ r.avance }}%;">
+                                    {{ r.avance }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            {% if r.reporte %}
+                                <a href="{{ r.reporte.url }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-file-earmark-text"></i> Ver
+                                </a>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="/updateavance/{{ r.id_registro }}" class="btn btn-warning btn-sm">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="/deleteavance/{{ r.id_registro }}"
+                               class="btn btn-danger btn-sm"
+                               onclick="confirmacion(event, this.href)">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+/* ── DataTable ── */
+new DataTable('#tbl_detalle_avances', {
+    layout: {
+        topStart: {
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+        }
+    },
+    order: [[0, 'desc']]
+});
+
+/* ── Gráfico evolución avance por hito ── */
+const registros = [
+    {% for r in registros %}
+    { fecha: "{{ r.fecha }}", hito: "{{ r.hito_id.nombre_hito|escapejs }}", avance: {{ r.avance }} },
+    {% endfor %}
+];
+
+// Agrupar por hito, últimos registros
+const hitoMap = {};
+registros.forEach(r => {
+    if (!hitoMap[r.hito]) hitoMap[r.hito] = [];
+    hitoMap[r.hito].push({ x: r.fecha, y: r.avance });
+});
+
+const colores = [
+    'rgba(13,110,253,1)', 'rgba(25,135,84,1)', 'rgba(255,193,7,1)',
+    'rgba(220,53,69,1)',  'rgba(13,202,240,1)', 'rgba(111,66,193,1)'
+];
+
+const datasets = Object.keys(hitoMap).map((hito, i) => ({
+    label: hito,
+    data: hitoMap[hito].sort((a, b) => a.x.localeCompare(b.x)),
+    borderColor: colores[i % colores.length],
+    backgroundColor: colores[i % colores.length].replace('1)', '0.1)'),
+    fill: false,
+    tension: 0.3,
+    pointRadius: 5,
+}));
+
+if (datasets.length > 0) {
+    new Chart(document.getElementById('chartDetalleAvance'), {
+        type: 'line',
+        data: { datasets },
+        options: {
+            responsive: true,
+            parsing: { xAxisKey: 'x', yAxisKey: 'y' },
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                x: { title: { display: true, text: 'Fecha' } },
+                y: {
+                    title: { display: true, text: 'Avance (%)' },
+                    min: 0, max: 100
+                }
+            }
+        }
+    });
+} else {
+    document.getElementById('chartDetalleAvance').parentElement.innerHTML =
+        '<p class="text-muted text-center py-4"><i class="bi bi-inbox"></i> Sin datos de avance aún.</p>';
+}
+</script>
+
+{% endblock %}

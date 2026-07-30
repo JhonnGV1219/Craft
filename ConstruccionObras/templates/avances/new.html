@@ -1,0 +1,194 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+<br><br><br><br><br>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0" id="form-title-avance">
+                        <i class="bi bi-journal-plus me-2"></i>Registrar Avance de Obra
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+
+                    <div class="alert alert-info py-2 mb-3" style="font-size:.85rem;">
+                        <i class="bi bi-keyboard me-1"></i>
+                        Atajo rápido: <kbd>Alt</kbd>+<kbd>G</kbd> coloca el foco en el campo Fecha.
+                    </div>
+
+                    <form action="/guardar_avance/"
+                          method="POST"
+                          enctype="multipart/form-data"
+                          id="form_avance">
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Fecha</label>
+                                <input type="date" name="fecha" id="campo-fecha"
+                                       class="form-control" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Avance (%)</label>
+                                <div class="input-group">
+                                    <input type="number" name="avance" id="campo-avance"
+                                           class="form-control"
+                                           min="0" max="100" step="0.01"
+                                           placeholder="0.00 – 100.00" required>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Hito asociado</label>
+                                <select name="hito" id="campo-hito" class="form-select" required>
+                                    <option value="" disabled selected>— Seleccione un hito —</option>
+                                    {% for h in hitos %}
+                                    <option value="{{ h.id_hito }}">
+                                        {{ h.nombre_hito }} — {{ h.obra_id.nombre_obra }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    Reporte / Evidencia
+                                    <small class="text-muted fw-normal">(PDF, imagen — opcional)</small>
+                                </label>
+                                <input type="file" name="reporte" id="campo-reporte"
+                                       class="form-control">
+                            </div>
+
+                        </div>
+
+                        <hr>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="/showavance/" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="button" class="btn btn-outline-info"
+                                    onclick="iniciarTourForm()">
+                                <i class="bi bi-question-circle"></i> Ayuda
+                            </button>
+                            <button type="submit" class="btn btn-success" id="btn-guardar-avance">
+                                <i class="bi bi-check-circle"></i> Guardar
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<br><br>
+
+<!-- hotkeys-js -->
+<script src="https://cdn.jsdelivr.net/npm/hotkeys-js@3.13.7/dist/hotkeys.min.js"></script>
+
+<script>
+/* ── fileinput para el reporte ── */
+$("#campo-reporte").fileinput({
+    language          : "es",
+    showCaption       : false,
+    dropZoneEnabled   : true,
+    showClose         : false,
+    showUpload        : false,
+    allowedFileExtensions: ["pdf", "png", "jpg", "jpeg"],
+    msgPlaceholder    : "Seleccionar archivo..."
+});
+$(".fileinput-upload").hide();
+
+/* ── Validación jQuery Validate ── */
+$("#form_avance").validate({
+    rules: {
+        fecha  : { required: true },
+        hito   : { required: true },
+        avance : { required: true, min: 0, max: 100 }
+    },
+    messages: {
+        avance: {
+            min: "El avance no puede ser negativo",
+            max: "El avance no puede superar el 100 %"
+        }
+    },
+    errorClass: "text-danger"
+});
+
+/* ── Hotkey Alt+G: foco en campo Fecha ── */
+hotkeys('alt+g', function(e) {
+    e.preventDefault();
+    document.getElementById('campo-fecha').focus();
+});
+
+/* ── Tour Driver.js ── */
+function iniciarTourForm() {
+    const driver    = window.driver.js.driver;
+    const driverObj = driver({
+        showProgress : true,
+        nextBtnText  : 'Siguiente →',
+        prevBtnText  : '← Anterior',
+        doneBtnText  : 'Finalizar',
+        steps: [
+            {
+                element: '#form-title-avance',
+                popover: {
+                    title      : 'Registro de Avance Diario',
+                    description: 'Completa este formulario para registrar el avance real de un hito en una fecha específica.',
+                    side       : 'bottom'
+                }
+            },
+            {
+                element: '#campo-fecha',
+                popover: {
+                    title      : 'Fecha del registro',
+                    description: 'Selecciona la fecha de la medición en campo. El atajo <kbd>Alt+G</kbd> coloca el foco aquí.',
+                    side       : 'right'
+                }
+            },
+            {
+                element: '#campo-avance',
+                popover: {
+                    title      : 'Porcentaje de avance',
+                    description: 'Ingresa el porcentaje de completitud del hito (0–100). Alimenta la S-Curve del Dashboard.',
+                    side       : 'right'
+                }
+            },
+            {
+                element: '#campo-hito',
+                popover: {
+                    title      : 'Hito de obra',
+                    description: 'Selecciona el hito al que corresponde este registro. Cada hito está vinculado a una obra.',
+                    side       : 'right'
+                }
+            },
+            {
+                element: '#campo-reporte',
+                popover: {
+                    title      : 'Evidencia / Reporte',
+                    description: 'Adjunta un PDF o imagen como evidencia del avance. Campo opcional.',
+                    side       : 'right'
+                }
+            },
+            {
+                element: '#btn-guardar-avance',
+                popover: {
+                    title      : 'Guardar registro',
+                    description: 'Al guardar, el avance queda en la bitácora y se refleja en el Dashboard.',
+                    side       : 'top'
+                }
+            }
+        ]
+    });
+    driverObj.drive();
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+
+<br><br><br><br><br>
+
+<center>
+    <h1>Subcontratistas</h1>
+    <br>
+    <a class="btn btn-success" href="/newsubcontratista/">
+        <i class="bi bi-plus-circle"></i> Nuevo Subcontratista
+    </a>
+</center>
+
+<br><br>
+
+<div class="container">
+    <table id="tbl_subcontratista" class="table table-hover table-striped table-bordered">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>Empresa</th>
+                <th>Especialidad</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Obra</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in data %}
+            <tr>
+                <td>{{ s.nombre_empresa }}</td>
+                <td>{{ s.especialidad }}</td>
+                <td>{{ s.telefono }}</td>
+                <td>{{ s.email }}</td>
+                <td>{{ s.obra_id.nombre_obra }}</td>
+                <td class="text-center">
+                    <a href="/updatesubcontratista/{{ s.id_subcontratista }}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="/deletesubcontratista/{{ s.id_subcontratista }}"
+                       class="btn btn-danger btn-sm"
+                       onclick="confirmacion(event, this.href)">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+new DataTable('#tbl_subcontratista', {
+    layout: {
+        topStart: {
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+        }
+    }
+});
+</script>
+
+{% endblock %}

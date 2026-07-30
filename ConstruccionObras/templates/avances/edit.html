@@ -1,0 +1,130 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+<br><br><br><br><br>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pencil-square me-2"></i>Editar Avance de Obra
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+
+                    <form action="/procesoupavance/"
+                          method="POST"
+                          enctype="multipart/form-data"
+                          id="form_edit_avance">
+                        {% csrf_token %}
+                        <input type="hidden" name="id" value="{{ a.id_registro }}">
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Fecha</label>
+                                <input type="date" name="fecha" class="form-control"
+                                       value="{{ a.fecha }}" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Avance (%)</label>
+                                <div class="input-group">
+                                    <input type="number" name="avance" class="form-control"
+                                           min="0" max="100" step="0.01"
+                                           value="{{ a.avance }}" required>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Hito asociado</label>
+                                <select name="hito" class="form-select" required>
+                                    {% for h in hitos %}
+                                    <option value="{{ h.id_hito }}"
+                                        {% if h.id_hito == a.hito_id.id_hito %}selected{% endif %}>
+                                        {{ h.nombre_hito }} — {{ h.obra_id.nombre_obra }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Reporte actual con fileinput -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    Reporte / Evidencia
+                                    <small class="text-muted fw-normal">
+                                        {% if a.reporte %}(hay archivo actual — sube uno nuevo para reemplazar)
+                                        {% else %}(opcional){% endif %}
+                                    </small>
+                                </label>
+                                <input type="file" name="reporte" id="reporte-edit"
+                                       class="form-control">
+                                {% if a.reporte %}
+                                <div class="mt-2">
+                                    <a href="{{ a.reporte.url }}" target="_blank"
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-file-earmark-text"></i> Ver reporte actual
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                        </div>
+
+                        <hr>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="/showavance/" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-circle"></i> Actualizar
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<br><br>
+
+<script>
+/* ── fileinput para el reporte ── */
+var reporteActual = "{% if a.reporte %}{{ a.reporte.url }}{% endif %}";
+
+$("#reporte-edit").fileinput({
+    language             : "es",
+    showCaption          : false,
+    dropZoneEnabled      : true,
+    showClose            : false,
+    showUpload           : false,
+    allowedFileExtensions: ["pdf", "png", "jpg", "jpeg"],
+    msgPlaceholder       : "Seleccionar archivo para reemplazar...",
+    initialPreview       : reporteActual ? [reporteActual] : [],
+    initialPreviewAsData : true,
+    initialPreviewFileType: reporteActual.endsWith('.pdf') ? 'pdf' : 'image',
+    overwriteInitial     : true
+});
+$(".fileinput-upload").hide();
+
+/* ── Validación ── */
+$("#form_edit_avance").validate({
+    rules: {
+        avance: { required: true, min: 0, max: 100 }
+    },
+    messages: {
+        avance: {
+            min: "El avance no puede ser negativo",
+            max: "El avance no puede superar el 100 %"
+        }
+    },
+    errorClass: "text-danger"
+});
+</script>
+
+{% endblock %}

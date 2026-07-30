@@ -1,0 +1,90 @@
+{% extends "principal/plantillaPrincipal.html" %}
+
+{% block contenido %}
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+
+<br><br><br><br><br><br>
+
+
+<div class="container">
+
+    <h2>Calendario de Obras</h2>
+
+    <div id="calendar"></div>
+
+</div>
+
+
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+
+    var calendarEl = document.getElementById('calendar');
+
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+
+
+        initialView: 'dayGridMonth',
+
+        locale:'es',
+
+        height:600,
+        
+        selectable:true,
+
+
+        events:'/eventos_obras/',
+
+
+
+        eventClick:function(info){
+
+
+            let obra = info.event;
+
+
+            alert(
+
+                "OBRA: " + obra.title +
+
+                "\n\nDescripción: " + 
+                obra.extendedProps.descripcion +
+
+                "\n\nPresupuesto: $" +
+                obra.extendedProps.presupuesto +
+
+                "\n\nEstado: " +
+                obra.extendedProps.estado +
+
+                "\n\nInicio: " +
+                obra.start.toLocaleDateString()+
+
+                "\nFin estimado: " +
+                obra.extendedProps.fecha_fin
+
+            );
+
+
+        }
+
+
+    });
+
+
+    calendar.render();
+
+
+});
+
+
+</script>
+<br><br><br><br><br>
+
+{% endblock %}

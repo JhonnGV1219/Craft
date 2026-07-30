@@ -1,0 +1,104 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+
+<br><br><br><br><br>
+
+<center>
+    <br>
+    <h1>Hitos Registrados</h1>
+    <br>
+    <a class="btn btn-success" href="/newhitos/">
+        <i class="bi bi-plus-circle"></i> Nuevo Hito
+    </a>
+</center>
+
+<br><br>
+
+<div class="container">
+    <div class="row">
+
+        <table id="tbl_hitos"
+               class="table table-hover table-striped table-bordered"
+               style="width: 1300px">
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre del Hito</th>
+                    <th>Descripción</th>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Fin Estimada</th>
+                    <th>Avance (%)</th>
+                    <th>Evidencia</th>
+                    <th>Estado</th>
+                    <th>Obra</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for hito in mishitos %}
+                <tr>
+
+                    <td>{{ hito.id_hito }}</td>
+                    <td>{{ hito.nombre_hito }}</td>
+                    <td>{{ hito.descripcion }}</td>
+                    <td>{{ hito.fecha_inicio }}</td>
+                    <td>{{ hito.fecha_fin_estimado }}</td>
+                    <td>{{ hito.avance_porcentaje }}</td>
+
+                    <!-- EVIDENCIA -->
+                    <td class="text-center">
+                        {% if hito.evidencia %}
+                            <iframe src="{{ hito.evidencia.url }}" width="100%" height="120px"></iframe>
+                        {% else %}
+                            <h6>No hay evidencia</h6>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ hito.estado }}</td>
+
+                    <!-- OBRA RELACIONADA -->
+                    <td>{{ hito.obra_id.nombre_obra }}</td>
+
+                    <!-- ACCIONES -->
+                    <td class="text-center" style="width: 500px;">
+
+                        <a href="/updatehitos/{{ hito.id_hito }}"
+                           class="btn btn-warning"
+                           title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+
+                        <a href="/deletehitos/{{ hito.id_hito }}"
+                           class="btn btn-danger"
+                           onclick="confirmacion(event, this.href)"
+                           title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                        <a href="{{hito.evidencia.url}}" target="_blank" class="btn btn-secondary btn-sm" title="Descargar Evidencia">
+                            <i class="bi bi-download"></i>
+                        </a>
+
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
+    </div>
+</div>
+
+<script>
+    new DataTable('#tbl_hitos', {
+        layout: {
+            topStart: {
+                buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+            }
+        }
+    });
+</script>
+
+{% endblock %}

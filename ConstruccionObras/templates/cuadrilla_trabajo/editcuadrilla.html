@@ -1,0 +1,72 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+<br><br><br><br><br>
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0">
+            <i class="bi bi-pencil-square me-2"></i>Editar Cuadrilla —
+            <span class="fw-normal">{{ c.nombre_cuadrilla }}</span>
+          </h5>
+        </div>
+        <div class="card-body p-4">
+
+          <form action="/procesoupcuadrilla/" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="id_cuadrilla" value="{{ c.id_cuadrilla }}">
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label fw-semibold">Nombre de la Cuadrilla</label>
+                <input type="text" name="nombre" class="form-control"
+                       value="{{ c.nombre_cuadrilla }}" required>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Tipo de Trabajo</label>
+                <input type="text" name="tipo" class="form-control"
+                       value="{{ c.tipo_trabajo }}" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Cantidad de Trabajadores</label>
+                <input type="number" name="cantidad" class="form-control"
+                       value="{{ c.cantidad_trabajadores }}" min="1" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Obra asignada</label>
+                <select name="obra" class="form-select">
+                  {% for o in obras %}
+                  <option value="{{ o.id_obra }}"
+                    {% if o.id_obra == c.obra_id.id_obra %}selected{% endif %}>
+                    {{ o.nombre_obra }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <hr>
+            <div class="d-flex justify-content-end gap-2">
+              <a href="/showcuadrilla/" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+              </a>
+              <button type="submit" class="btn btn-warning">
+                <i class="bi bi-check-circle"></i> Actualizar
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<br><br>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+
+<br><br><br><br><br>
+
+<center>
+    <h1 id="titulo-avances">Registro de Avances de Obra</h1>
+    <br>
+    <a class="btn btn-success" href="/newavance/" id="btn-nuevo-avance">
+        <i class="bi bi-plus-circle"></i> Nuevo Avance
+    </a>
+    <button class="btn btn-outline-info ms-2" id="btn-tour" onclick="iniciarTour()">
+        <i class="bi bi-question-circle"></i> Tour de Ayuda
+    </button>
+</center>
+
+<br>
+
+<div class="container">
+    <div class="alert alert-secondary py-1 mb-3" style="font-size:.85rem;">
+        <i class="bi bi-keyboard"></i>
+        Tip: presiona <kbd>Alt</kbd>+<kbd>G</kbd> para registrar un nuevo avance rápidamente.
+    </div>
+
+    <table id="tbl_avances" class="table table-hover table-striped table-bordered">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>Fecha</th>
+                <th>Hito</th>
+                <th>Avance (%)</th>
+                <th>Reporte</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in data %}
+            <tr>
+                <td class="text-center">{{ a.fecha }}</td>
+                <td>{{ a.hito_id.nombre_hito }}</td>
+                <td class="text-center">
+                    <div class="progress" style="height:20px;">
+                        <div class="progress-bar
+                            {% if a.avance >= 75 %}bg-success
+                            {% elif a.avance >= 40 %}bg-warning
+                            {% else %}bg-danger{% endif %}"
+                            role="progressbar"
+                            style="width:{{ a.avance }}%;"
+                            aria-valuenow="{{ a.avance }}"
+                            aria-valuemin="0" aria-valuemax="100">
+                            {{ a.avance }}%
+                        </div>
+                    </div>
+                </td>
+                <td class="text-center">
+                    {% if a.reporte %}
+                        <a href="{{ a.reporte.url }}" target="_blank"
+                           class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-file-earmark-text"></i> Ver
+                        </a>
+                    {% else %}
+                        <span class="text-muted">Sin reporte</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <a href="/updateavance/{{ a.id_registro }}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="/deleteavance/{{ a.id_registro }}"
+                       class="btn btn-danger btn-sm"
+                       onclick="confirmacion(event, this.href)">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- hotkeys-js CDN (debe cargarse antes del script que lo usa) -->
+<script src="https://cdn.jsdelivr.net/npm/hotkeys-js@3.13.7/dist/hotkeys.min.js"></script>
+
+<script>
+/* ── DataTable ── */
+/*Principalmente para las opciones de botones */
+new DataTable('#tbl_avances', {
+    layout: {
+        topStart: {
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+        }
+    },
+    order: [[0, 'desc']]
+});
+
+/* ── Hotkey Alt+G → abrir formulario de nuevo avance (hotkeys-js) ── */
+hotkeys('alt+g', function (event) {
+    event.preventDefault();
+    window.location.href = '/newavance/';
+});
+
+/* ── Tour interactivo con Driver.js ── */
+function iniciarTour() {
+    const driver = window.driver.js.driver;
+    const driverObj = driver({
+        showProgress : true,
+        nextBtnText  : 'Siguiente →',
+        prevBtnText  : '← Anterior',
+        doneBtnText  : 'Finalizar',
+        steps: [
+            {
+                element: '#titulo-avances',
+                popover: {
+                    title      : 'Bitácora de Avances',
+                    description: 'Aquí se registra el progreso diario de cada hito de obra. Cada entrada documenta el porcentaje de avance alcanzado en la fecha correspondiente.',
+                    side       : 'bottom'
+                }
+            },
+            {
+                element: '#btn-nuevo-avance',
+                popover: {
+                    title      : 'Registrar nuevo avance',
+                    description: 'Haz clic aquí o presiona <kbd>Alt+G</kbd> desde cualquier página para abrir el formulario de registro rápido.',
+                    side       : 'bottom'
+                }
+            },
+            {
+                element: '#tbl_avances',
+                popover: {
+                    title      : 'Tabla de avances',
+                    description: 'Muestra todos los registros ordenados por fecha. La barra de progreso cambia de color: rojo (&lt;40 %), amarillo (40–74 %) y verde (≥75 %).',
+                    side       : 'top'
+                }
+            },
+            {
+                element: '#btn-tour',
+                popover: {
+                    title      : '¿Necesitas ayuda?',
+                    description: 'Pulsa este botón en cualquier momento para volver a ver este tour.',
+                    side       : 'left'
+                }
+            }
+        ]
+    });
+    driverObj.drive();
+}
+</script>
+
+{% endblock %}

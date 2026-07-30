@@ -1,0 +1,413 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+
+<style>
+  /* ── layout ── */
+  .panel-pool { position: sticky; top: 80px; }
+
+  /* ── pool ── */
+  #pool-disponible {
+    min-height: 90px;
+    border: 2px solid #198754;
+    border-radius: 8px;
+    padding: 8px;
+    background: #f0fdf4;
+  }
+
+  /* ── zona de drop ── */
+  .frente-drop {
+    min-height: 100px;
+    border: 2px dashed #adb5bd;
+    border-radius: 8px;
+    padding: 8px;
+    background: #f8f9fa;
+    transition: background .15s, border-color .15s;
+  }
+  .frente-drop.drag-over {
+    background: #dbeafe;
+    border-color: #0d6efd;
+    border-style: solid;
+  }
+
+  /* ── tarjeta ── */
+  .maq-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 7px 10px;
+    margin-bottom: 6px;
+    cursor: grab;
+    user-select: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    transition: opacity .15s, box-shadow .15s;
+  }
+  .maq-card.dragging    { opacity: .35; cursor: grabbing; }
+  .maq-card.pendiente   { border-left: 4px solid #ffc107; }
+  .maq-card.no-drag     { cursor: default; opacity: .6; }
+  .btn-guardar-asign    { display: none; }
+  .placeholder-txt      { pointer-events: none; }
+</style>
+
+<br><br><br><br><br>
+
+<div class="container-fluid px-4">
+
+  <h1 class="text-center mb-1">
+    <i class="bi bi-arrows-move"></i> Asignación de Maquinaria a Frentes de Trabajo
+  </h1>
+  <p class="text-center text-muted mb-3">
+    Arrastra una o varias máquinas al frente (obra) y pulsa <strong>Guardar asignación</strong>.
+  </p>
+
+  {% if request.GET.ok %}
+  <div class="alert alert-success alert-dismissible fade show text-center" role="alert">
+    <i class="bi bi-check-circle-fill"></i> Asignación guardada correctamente.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endif %}
+
+  <div class="row">
+
+    <!-- ══ Columna izquierda ══ -->
+    <div class="col-lg-3 col-md-4 mb-4">
+      <div class="panel-pool">
+
+        <!-- Pool disponible -->
+        <div class="card shadow-sm mb-3">
+          <div class="card-header bg-success text-white d-flex
+                       justify-content-between align-items-center">
+            <span><i class="bi bi-truck"></i> Disponible</span>
+            <span class="badge bg-light text-success" id="cnt-disp">
+              {{ disponible|length }}
+            </span>
+          </div>
+          <div class="card-body p-2" id="pool-disponible">
+            {% for m in disponible %}
+            <div class="maq-card"
+                 id="maq-{{ m.id_maquinaria }}"
+                 draggable="true"
+                 data-id="{{ m.id_maquinaria }}"
+                 data-nombre="{{ m.nombre_maquinaria }}"
+                 data-tipo="{{ m.tipo_maquinaria }}">
+              <i class="bi bi-truck-front text-success fs-5"></i>
+              <div class="flex-grow-1">
+                <div class="fw-semibold" style="font-size:.88rem;">{{ m.nombre_maquinaria }}</div>
+                <small class="text-muted">{{ m.tipo_maquinaria }}</small>
+              </div>
+              <span class="badge bg-success" style="font-size:.68rem;">Disponible</span>
+            </div>
+            {% empty %}
+            <p class="text-muted text-center small mt-2" id="msg-vacio">
+              <i class="bi bi-check-all"></i> Toda asignada
+            </p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- En uso (referencia) -->
+        {% if en_uso %}
+        <div class="card shadow-sm">
+          <div class="card-header bg-secondary text-white">
+            <i class="bi bi-gear"></i> En uso
+          </div>
+          <div class="card-body p-2">
+            {% for m in en_uso %}
+            <div class="maq-card no-drag">
+              <i class="bi bi-truck-front text-secondary fs-5"></i>
+              <div class="flex-grow-1">
+                <div class="fw-semibold" style="font-size:.88rem;">{{ m.nombre_maquinaria }}</div>
+                <small class="text-muted">
+                  {% if m.obra_id %}{{ m.obra_id.nombre_obra }}{% else %}Sin obra{% endif %}
+                </small>
+              </div>
+              <span class="badge bg-secondary" style="font-size:.68rem;">En uso</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+      </div><!-- /panel-pool -->
+    </div>
+
+    <!-- ══ Columna derecha: frentes ══ -->
+    <div class="col-lg-9 col-md-8">
+      <div class="row">
+
+        {% for obra in obras %}
+        <div class="col-xl-4 col-md-6 mb-4">
+          <div class="card shadow-sm h-100">
+
+            <div class="card-header bg-dark text-white d-flex
+                         justify-content-between align-items-center">
+              <span class="text-truncate me-2">
+                <i class="bi bi-building"></i> {{ obra.nombre_obra }}
+              </span>
+              <span class="badge flex-shrink-0
+                {% if obra.estado == 'En ejecucion' %}bg-warning text-dark
+                {% elif obra.estado == 'Planificada'%}bg-info text-dark
+                {% else %}bg-secondary{% endif %}">
+                {{ obra.estado }}
+              </span>
+            </div>
+
+            <div class="card-body p-2">
+              <div class="frente-drop"
+                   id="drop-{{ obra.id_obra }}"
+                   data-obra-id="{{ obra.id_obra }}">
+                <p class="text-muted text-center small mt-2 placeholder-txt">
+                  <i class="bi bi-arrow-down-circle"></i> Arrastra maquinaria aquí
+                </p>
+              </div>
+            </div>
+
+            <div class="card-footer p-2">
+              <form action="/guardar_asignacion_maquinaria/"
+                    method="POST"
+                    id="form-{{ obra.id_obra }}">
+                {% csrf_token %}
+                <input type="hidden" name="obra_id" value="{{ obra.id_obra }}">
+                <div class="maq-inputs"></div>
+                <button type="submit"
+                        class="btn btn-primary btn-sm w-100 btn-guardar-asign">
+                  <i class="bi bi-floppy"></i> Guardar asignación
+                </button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+          <div class="alert alert-warning text-center">
+            No hay obras activas. <a href="/newobras/">Registra una obra primero.</a>
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   Drag & Drop con HTML5 nativo
+   (evita conflictos jQuery 1.12 + jQuery UI + Bootstrap)
+═══════════════════════════════════════════════════════ */
+
+let dragId    = null;   // id de la máquina que se está arrastrando
+let dragNombre = '';
+let dragTipo   = '';
+
+/* ── Activa los listeners en una tarjeta ── */
+function bindDrag(el) {
+  el.setAttribute('draggable', 'true');
+  el.addEventListener('dragstart', function(e) {
+    dragId     = this.dataset.id;
+    dragNombre = this.dataset.nombre;
+    dragTipo   = this.dataset.tipo || '';
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dragId);   // requerido en Firefox
+    setTimeout(() => this.classList.add('dragging'), 0);
+  });
+  el.addEventListener('dragend', function() {
+    this.classList.remove('dragging');
+  });
+}
+
+/* Bind inicial en tarjetas del pool */
+document.querySelectorAll('#pool-disponible .maq-card').forEach(bindDrag);
+
+/* ── Zonas de drop ── */
+document.querySelectorAll('.frente-drop').forEach(function(zona) {
+
+  zona.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    this.classList.add('drag-over');
+  });
+
+  zona.addEventListener('dragleave', function(e) {
+    /* solo quitar highlight si salimos del contenedor */
+    if (!this.contains(e.relatedTarget)) {
+      this.classList.remove('drag-over');
+    }
+  });
+
+  zona.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('drag-over');
+
+    if (!dragId) return;
+
+    const obraId = this.dataset.obraId;
+
+    /* Evitar duplicado en la misma zona */
+    if (this.querySelector('[data-id="' + dragId + '"]')) return;
+
+    /* Quitar tarjeta original de donde estaba */
+    const original = document.getElementById('maq-' + dragId);
+    if (original) original.remove();
+
+    /* Ocultar placeholder */
+    const ph = this.querySelector('.placeholder-txt');
+    if (ph) ph.style.display = 'none';
+
+    /* Crear tarjeta en la zona destino */
+    const card = document.createElement('div');
+    card.className = 'maq-card pendiente';
+    card.id        = 'maq-' + dragId;
+    card.dataset.id     = dragId;
+    card.dataset.nombre = dragNombre;
+    card.dataset.tipo   = dragTipo;
+    card.setAttribute('draggable', 'true');
+    card.innerHTML =
+      '<i class="bi bi-truck-front text-primary fs-5"></i>' +
+      '<div class="flex-grow-1">' +
+        '<div class="fw-semibold" style="font-size:.88rem;">' + dragNombre + '</div>' +
+        '<small class="text-muted">' + dragTipo + '</small>' +
+      '</div>' +
+      '<span class="badge bg-warning text-dark me-1" style="font-size:.68rem;">Por guardar</span>' +
+      '<button type="button" class="btn btn-link btn-sm text-danger p-0 btn-quitar"' +
+              ' data-id="' + dragId + '" title="Quitar de esta obra">' +
+        '<i class="bi bi-x-circle-fill"></i>' +
+      '</button>';
+
+    bindDrag(card);
+    this.appendChild(card);
+
+    /* Registrar en el formulario de esta obra */
+    const form    = document.getElementById('form-' + obraId);
+    const inputs  = form.querySelector('.maq-inputs');
+    const exists  = inputs.querySelector('input[value="' + dragId + '"]');
+    if (!exists) {
+      const inp  = document.createElement('input');
+      inp.type   = 'hidden';
+      inp.name   = 'maquinaria_ids[]';
+      inp.value  = dragId;
+      inputs.appendChild(inp);
+    }
+    form.querySelector('.btn-guardar-asign').style.display = 'block';
+
+    /* Actualizar contador del pool */
+    actualizarContador();
+    dragId = null;
+  });
+});
+
+/* ── Pool acepta tarjetas de vuelta ── */
+const pool = document.getElementById('pool-disponible');
+pool.addEventListener('dragover', function(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+});
+pool.addEventListener('drop', function(e) {
+  e.preventDefault();
+  if (!dragId) return;
+
+  /* Si venía de una zona, limpiar el input de esa forma */
+  const original = document.getElementById('maq-' + dragId);
+  if (original) {
+    const zona = original.closest('.frente-drop');
+    if (zona) {
+      const obraId = zona.dataset.obraId;
+      const form   = document.getElementById('form-' + obraId);
+      const inp    = form.querySelector('input[value="' + dragId + '"]');
+      if (inp) inp.remove();
+      if (!form.querySelector('.maq-inputs input')) {
+        form.querySelector('.btn-guardar-asign').style.display = 'none';
+      }
+      if (!zona.querySelector('.maq-card')) {
+        zona.querySelector('.placeholder-txt').style.display = '';
+      }
+    }
+    original.remove();
+  }
+
+  /* Reconstruir tarjeta para el pool */
+  const back = document.createElement('div');
+  back.className = 'maq-card';
+  back.id        = 'maq-' + dragId;
+  back.dataset.id     = dragId;
+  back.dataset.nombre = dragNombre;
+  back.dataset.tipo   = dragTipo;
+  back.innerHTML =
+    '<i class="bi bi-truck-front text-success fs-5"></i>' +
+    '<div class="flex-grow-1">' +
+      '<div class="fw-semibold" style="font-size:.88rem;">' + dragNombre + '</div>' +
+      '<small class="text-muted">' + dragTipo + '</small>' +
+    '</div>' +
+    '<span class="badge bg-success" style="font-size:.68rem;">Disponible</span>';
+
+  bindDrag(back);
+  const msgVacio = document.getElementById('msg-vacio');
+  if (msgVacio) msgVacio.remove();
+  pool.appendChild(back);
+
+  actualizarContador();
+  dragId = null;
+});
+
+/* ── Botón quitar ── */
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.btn-quitar');
+  if (!btn) return;
+
+  const id    = btn.dataset.id;
+  const card  = document.getElementById('maq-' + id);
+  if (!card) return;
+
+  const nombre = card.dataset.nombre;
+  const tipo   = card.dataset.tipo || '';
+  const zona   = card.closest('.frente-drop');
+  const obraId = zona.dataset.obraId;
+  const form   = document.getElementById('form-' + obraId);
+
+  /* Quitar input hidden */
+  const inp = form.querySelector('input[value="' + id + '"]');
+  if (inp) inp.remove();
+  if (!form.querySelector('.maq-inputs input')) {
+    form.querySelector('.btn-guardar-asign').style.display = 'none';
+  }
+
+  card.remove();
+
+  if (!zona.querySelector('.maq-card')) {
+    zona.querySelector('.placeholder-txt').style.display = '';
+  }
+
+  /* Devolver al pool */
+  const back = document.createElement('div');
+  back.className = 'maq-card';
+  back.id        = 'maq-' + id;
+  back.dataset.id     = id;
+  back.dataset.nombre = nombre;
+  back.dataset.tipo   = tipo;
+  back.innerHTML =
+    '<i class="bi bi-truck-front text-success fs-5"></i>' +
+    '<div class="flex-grow-1">' +
+      '<div class="fw-semibold" style="font-size:.88rem;">' + nombre + '</div>' +
+      '<small class="text-muted">' + tipo + '</small>' +
+    '</div>' +
+    '<span class="badge bg-success" style="font-size:.68rem;">Disponible</span>';
+
+  bindDrag(back);
+  const mv = document.getElementById('msg-vacio');
+  if (mv) mv.remove();
+  pool.appendChild(back);
+  actualizarContador();
+});
+
+/* ── Contador ── */
+function actualizarContador() {
+  document.getElementById('cnt-disp').textContent =
+    pool.querySelectorAll('.maq-card').length;
+}
+</script>
+
+{% endblock %}

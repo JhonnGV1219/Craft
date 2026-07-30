@@ -1,0 +1,276 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+
+<br><br><br><br><br>
+
+<div class="container-fluid px-4">
+
+    <h1 class="text-center mb-1">Dashboard de Obra</h1>
+    <p class="text-center text-muted mb-4">Desvío presupuestario · Cronograma S-Curve · Consumo de materiales</p>
+
+    <!-- ── KPIs ── -->
+    <div class="row text-center mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-primary">{{ total_obras }}</div>
+                    <div class="text-muted">Obras registradas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-warning">{{ obras_en_ejecucion }}</div>
+                    <div class="text-muted">En ejecución</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-success">{{ hitos_completados }}</div>
+                    <div class="text-muted">Hitos completados</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="display-6 fw-bold text-info">{{ total_subcontratistas }}</div>
+                    <div class="text-muted">Subcontratistas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Fila 1: S-Curve Presupuestario + S-Curve Cronograma ── -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <i class="bi bi-graph-up-arrow"></i> S-Curve — Desvío Presupuestario
+                </div>
+                <div class="card-body">
+                    <canvas id="chartPresupuesto" height="280"></canvas>
+                </div>
+                <div class="card-footer text-muted small">
+                    Línea azul: presupuesto acumulado estimado &nbsp;|&nbsp; Línea roja: gasto real acumulado (unidades consumidas)
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <i class="bi bi-calendar2-check"></i> S-Curve — Cronograma de Hitos
+                </div>
+                <div class="card-body">
+                    <canvas id="chartCronograma" height="280"></canvas>
+                </div>
+                <div class="card-footer text-muted small">
+                    Línea azul: avance planificado &nbsp;|&nbsp; Línea verde: avance real registrado
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Fila 2: Materiales vs Estimado ── -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <i class="bi bi-bar-chart-line"></i> Consumo de Materiales vs. Estimado en Planos
+                </div>
+                <div class="card-body">
+                    <canvas id="chartMateriales" height="120"></canvas>
+                </div>
+                <div class="card-footer text-muted small">
+                    Barras azules: cantidad estimada &nbsp;|&nbsp; Barras naranjas: cantidad real consumida
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Accesos rápidos ── -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <a href="/showobras/" class="btn btn-outline-primary m-1"><i class="bi bi-building"></i> Obras</a>
+            <a href="/showhitos/" class="btn btn-outline-secondary m-1"><i class="bi bi-flag"></i> Hitos</a>
+            <a href="/showmaquinaria/" class="btn btn-outline-warning m-1"><i class="bi bi-truck"></i> Maquinaria</a>
+            <a href="/showmaterial/" class="btn btn-outline-success m-1"><i class="bi bi-box-seam"></i> Materiales</a>
+            <a href="/showmaterialobra/" class="btn btn-outline-info m-1"><i class="bi bi-clipboard-data"></i> Mat. x Obra</a>
+            <a href="/showsubcontratista/" class="btn btn-outline-dark m-1"><i class="bi bi-people"></i> Subcontratistas</a>
+            <a href="/showavance/" class="btn btn-outline-danger m-1"><i class="bi bi-journal-text"></i> Bitácora</a>
+            <a href="/registro/" class="btn btn-outline-secondary m-1"><i class="bi bi-journal-richtext"></i> Registro por Obra</a>
+            <a href="/asignar_maquinaria/" class="btn btn-outline-primary m-1"><i class="bi bi-arrows-move"></i> Asignar Maquinaria</a>
+        </div>
+    </div>
+
+</div><!-- /container-fluid -->
+
+<script>
+/* ──────────────────────────────────────────────────────
+   Datos desde Django (JSON safe)
+────────────────────────────────────────────────────── */
+const presupuestoLabels   = {{ presupuesto_labels|safe }};
+const presupuestoAcum     = {{ presupuesto_acumulado|safe }};
+const gastoRealAcum       = {{ gasto_real_acumulado|safe }};
+
+const hitosLabels         = {{ hitos_labels|safe }};
+const avancePlanificado   = {{ avance_planificado|safe }};
+const avanceReal          = {{ avance_real|safe }};
+
+const matLabels           = {{ mat_labels|safe }};
+const matEstimado         = {{ mat_estimado|safe }};
+const matReal             = {{ mat_real|safe }};
+
+/* ──────────────────────────────────────────────────────
+   Helper: colores para barras (verde si real <= estimado, rojo si excede)
+────────────────────────────────────────────────────── */
+const coloresMat = matReal.map((r, i) =>
+    r > matEstimado[i] ? 'rgba(220,53,69,0.75)' : 'rgba(255,143,43,0.75)'
+);
+
+/* ──────────────────────────────────────────────────────
+   1. S-Curve Presupuestario
+────────────────────────────────────────────────────── */
+new Chart(document.getElementById('chartPresupuesto'), {
+    type: 'line',
+    data: {
+        labels: presupuestoLabels.length ? presupuestoLabels : ['Sin datos'],
+        datasets: [
+            {
+                label: 'Presupuesto acumulado ($)',
+                data: presupuestoAcum,
+                borderColor: 'rgba(13,110,253,1)',
+                backgroundColor: 'rgba(13,110,253,0.08)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+            },
+            {
+                label: 'Gasto real acumulado (ud.)',
+                data: gastoRealAcum,
+                borderColor: 'rgba(220,53,69,1)',
+                backgroundColor: 'rgba(220,53,69,0.08)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                borderDash: [6, 3],
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+            x: { title: { display: true, text: 'Fecha de inicio de obra' } },
+            y: { title: { display: true, text: 'Acumulado' }, beginAtZero: true }
+        }
+    }
+});
+
+/* ──────────────────────────────────────────────────────
+   2. S-Curve Cronograma
+────────────────────────────────────────────────────── */
+new Chart(document.getElementById('chartCronograma'), {
+    type: 'line',
+    data: {
+        labels: hitosLabels.length ? hitosLabels : ['Sin datos'],
+        datasets: [
+            {
+                label: 'Avance planificado (%)',
+                data: avancePlanificado,
+                borderColor: 'rgba(13,110,253,1)',
+                backgroundColor: 'rgba(13,110,253,0.08)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+            },
+            {
+                label: 'Avance real (%)',
+                data: avanceReal,
+                borderColor: 'rgba(25,135,84,1)',
+                backgroundColor: 'rgba(25,135,84,0.08)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                borderDash: [6, 3],
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+            x: { title: { display: true, text: 'Fecha de inicio de hito' } },
+            y: {
+                title: { display: true, text: 'Avance (%)' },
+                min: 0, max: 100
+            }
+        }
+    }
+});
+
+/* ──────────────────────────────────────────────────────
+   3. Barras: Materiales vs Estimado
+────────────────────────────────────────────────────── */
+new Chart(document.getElementById('chartMateriales'), {
+    type: 'bar',
+    data: {
+        labels: matLabels.length ? matLabels : ['Sin datos'],
+        datasets: [
+            {
+                label: 'Cantidad estimada',
+                data: matEstimado,
+                backgroundColor: 'rgba(13,110,253,0.65)',
+                borderColor: 'rgba(13,110,253,1)',
+                borderWidth: 1,
+            },
+            {
+                label: 'Cantidad real',
+                data: matReal,
+                backgroundColor: coloresMat,
+                borderColor: coloresMat.map(c => c.replace('0.75', '1')),
+                borderWidth: 1,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+                callbacks: {
+                    afterLabel: function(ctx) {
+                        if (ctx.datasetIndex === 1) {
+                            const est = matEstimado[ctx.dataIndex];
+                            const real = matReal[ctx.dataIndex];
+                            const diff = real - est;
+                            return diff > 0
+                                ? `⚠ Exceso: +${diff.toFixed(2)}`
+                                : `✔ Dentro de estimado (${diff.toFixed(2)})`;
+                        }
+                    }
+                }
+            }
+        },
+        scales: {
+            x: { title: { display: true, text: 'Material (Obra)' } },
+            y: { title: { display: true, text: 'Cantidad' }, beginAtZero: true }
+        }
+    }
+});
+</script>
+
+{% endblock %}

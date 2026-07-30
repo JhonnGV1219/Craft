@@ -1,0 +1,84 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+
+<br><br><br><br><br>
+
+<center>
+    <h1>Maquinaria Registrada</h1>
+    <br>
+    <a class="btn btn-success" href="/newmaquinaria/">
+        <i class="bi bi-plus-circle"></i> Nueva Maquinaria
+    </a>
+</center>
+
+<br><br>
+
+<div class="container">
+    <table id="tbl_maquinaria" class="table table-hover table-striped table-bordered">
+
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Imagen</th>
+                <th>Obra</th>
+                <th>Hito</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for m in maquinaria %}
+            <tr>
+                <td>{{ m.nombre_maquinaria }}</td>
+                <td>{{ m.tipo_maquinaria }}</td>
+                <td>{{ m.estado }}</td>
+                <td>
+                    {% if m.imagen %}
+                        <img src="{{ m.imagen.url }}" width="80">
+                    {% endif %}
+                </td>
+                <td>{% if m.obra_id %}
+                        {{ m.obra_id.nombre_obra }}
+                    {% else %}
+                        Sin asignar
+                    {% endif %}
+                    </td>
+                <td>
+                    {% if m.id_hito %}
+                        {{ m.id_hito.nombre_hito }}
+                    {% else %}
+                        Sin asignar
+                    {% endif %}
+                </td>
+
+                <td class="text-center">
+                    <a href="/updatemaquinaria/{{ m.id_maquinaria }}" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+
+                    <a href="/deletemaquinaria/{{ m.id_maquinaria }}"
+                       class="btn btn-danger"
+                       onclick="confirmacion(event, this.href)">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+</div>
+
+<script>
+new DataTable('#tbl_maquinaria', {
+    layout: {
+        topStart: {
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+        }
+    }
+});
+</script>
+
+{% endblock %}

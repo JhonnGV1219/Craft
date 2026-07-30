@@ -1,0 +1,79 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+
+<br><br><br><br><br>
+
+<center>
+    <br>
+    <h1>Cuadrillas de Trabajo</h1>
+    <br>
+    <a class="btn btn-success" href="/newcuadrilla/">
+        <i class="bi bi-plus-circle"></i> Nueva Cuadrilla de Trabajo
+    </a>
+</center>
+
+<br><br>
+
+<div class="container">
+    <div class="row">
+
+        <table id="tbl_cuadrillas"
+               class="table table-hover table-striped table-bordered"
+               style="width: 1300px">
+
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Cantidad</th>
+                    <th>Obra</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for c in cuadrillas %}
+                <tr>
+                    <td>{{ c.nombre_cuadrilla }}</td>
+                    <td>{{ c.tipo_trabajo }}</td>
+                    <td>{{ c.cantidad_trabajadores }}</td>
+                    <td>{{ c.obra_id.nombre_obra }}</td>
+
+
+                    <!-- ACCIONES -->
+                    <td class="text-center" style="width: 500px;">
+
+                        <a href="/updatecuadrilla/{{ c.id_cuadrilla }}"
+                           class="btn btn-warning"
+                           title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+
+                        <a href="/deletecuadrilla/{{ c.id_cuadrilla }}"
+                           class="btn btn-danger"
+                           onclick="confirmacion(event, this.href)"
+                           title="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
+    </div>
+</div>
+
+<script>
+    new DataTable('#tbl_cuadrillas', {
+        layout: {
+            topStart: {
+                buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+            }
+        }
+    });
+</script>
+
+{% endblock %}

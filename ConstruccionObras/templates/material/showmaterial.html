@@ -1,0 +1,45 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+<br><br><br><br><br>
+<div class="container">
+    <h1 class="text-center">Listado de Materiales</h1>
+    <hr>
+
+    <div class="text-end mb-3">
+        <a href="/newmaterial/" class="btn btn-primary">Nuevo Material</a>
+    </div>
+
+    <table class="table table-bordered table-striped text-center" id="tbl_materiales">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Unidad</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in material %}
+            <tr>
+                <td>{{ m.id_material }}</td>
+                <td>{{ m.nombre }}</td>
+                <td>{{ m.unidad }}</td>
+                <td>
+                    <a href="/updatematerial/{{m.id_material}}" class="btn btn-warning btn-sm">Editar</a>
+                    <a href="/deletematerial/{{m.id_material}}" class="btn btn-danger btn-sm">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+new DataTable('#tbl_materiales', {
+    layout: {
+        topStart: {
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+<br><br><br><br><br>
+
+<div class="container-fluid px-4">
+
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="mb-0"><i class="bi bi-building me-2"></i>Obras Registradas</h2>
+      <small class="text-muted">Gestión de obras de construcción</small>
+    </div>
+    <a class="btn btn-success" href="/newobras/">
+      <i class="bi bi-plus-circle"></i> Nueva Obra
+    </a>
+  </div>
+  <hr class="mt-0">
+
+  <div class="table-responsive">
+    <table id="tbl_obras" class="table table-hover table-bordered align-middle">
+      <thead class="table-dark text-center">
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Inicio</th>
+          <th>Fin Estimado</th>
+          <th>Presupuesto</th>
+          <th>Plano</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for obra in misobras %}
+        <tr>
+          <td class="text-center fw-bold">{{ obra.id_obra }}</td>
+          <td><span class="fw-semibold">{{ obra.nombre_obra }}</span></td>
+          <td><small>{{ obra.descripcion }}</small></td>
+          <td class="text-center">{{ obra.fecha_inicio }}</td>
+          <td class="text-center">{{ obra.fecha_fin_estimado }}</td>
+          <td class="text-end">
+            {% if obra.presupuesto_total %}
+              $ {{ obra.presupuesto_total|floatformat:2 }}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if obra.plano %}
+              <a href="{{ obra.plano.url }}" target="_blank"
+                 class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-file-earmark-pdf"></i> Ver
+              </a>
+            {% else %}
+              <span class="text-muted small">Sin plano</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <span class="badge
+              {% if obra.estado == 'En ejecucion' %}bg-warning text-dark
+              {% elif obra.estado == 'Finalizada' %}bg-success
+              {% elif obra.estado == 'Suspendida' %}bg-danger
+              {% else %}bg-secondary{% endif %}">
+              {{ obra.estado }}
+            </span>
+          </td>
+          <td class="text-center" style="white-space:nowrap;">
+            <a href="/updateobras/{{ obra.id_obra }}"
+               class="btn btn-warning btn-sm" title="Editar">
+              <i class="bi bi-pencil-square"></i>
+            </a>
+            <a href="/deleteobras/{{ obra.id_obra }}"
+               class="btn btn-danger btn-sm"
+               onclick="confirmacion(event, this.href)"
+               title="Eliminar">
+              <i class="bi bi-trash3"></i>
+            </a>
+            {% if obra.plano %}
+            <a href="{{ obra.plano.url }}" target="_blank"
+               class="btn btn-outline-info btn-sm" title="Descargar plano">
+              <i class="bi bi-download"></i>
+            </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+new DataTable('#tbl_obras', {
+  layout: { topStart: { buttons: ['copy','csv','excel','pdf','print'] } },
+  order: [[0,'desc']],
+  columnDefs: [{ orderable: false, targets: [6,8] }]
+});
+</script>
+{% endblock %}

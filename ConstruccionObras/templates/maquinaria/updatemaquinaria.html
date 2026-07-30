@@ -1,0 +1,109 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+<br><br><br><br><br>
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0">
+            <i class="bi bi-pencil-square me-2"></i>Editar Maquinaria —
+            <span class="fw-normal">{{ m.nombre_maquinaria }}</span>
+          </h5>
+        </div>
+        <div class="card-body p-4">
+
+          <form action="/procesoupmaquinaria/" method="POST"
+                enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ m.id_maquinaria }}">
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Nombre</label>
+                <input type="text" name="nombre" class="form-control"
+                       value="{{ m.nombre_maquinaria }}" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Tipo</label>
+                <input type="text" name="tipo" class="form-control"
+                       value="{{ m.tipo_maquinaria }}" required>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Estado</label>
+                <select name="estado" class="form-select">
+                  <option value="disponible"    {% if m.estado == "disponible"    %}selected{% endif %}>Disponible</option>
+                  <option value="en_uso"        {% if m.estado == "en_uso"        %}selected{% endif %}>En Uso</option>
+                  <option value="mantenimiento" {% if m.estado == "mantenimiento" %}selected{% endif %}>Mantenimiento</option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Obra asignada</label>
+                <select name="obra" class="form-select">
+                  <option value="">Sin asignar</option>
+                  {% for o in obras %}
+                  <option value="{{ o.id_obra }}"
+                    {% if m.obra_id_id == o.id_obra %}selected{% endif %}>
+                    {{ o.nombre_obra }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Hito asignado</label>
+                <select name="hito" class="form-select">
+                  <option value="">Sin asignar</option>
+                  {% for h in hitos %}
+                  <option value="{{ h.id_hito }}"
+                    {% if m.id_hito_id == h.id_hito %}selected{% endif %}>
+                    {{ h.nombre_hito }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Imagen</label>
+                <input type="file" name="imagen" id="imagen" class="form-control">
+              </div>
+            </div>
+
+            <hr>
+            <div class="d-flex justify-content-end gap-2">
+              <a href="/showmaquinaria/" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+              </a>
+              <button type="submit" class="btn btn-warning">
+                <i class="bi bi-check-circle"></i> Actualizar
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<br><br>
+
+<script>
+$("#imagen").fileinput({
+  language: "es",
+  allowedFileExtensions: ["png", "jpg", "jpeg"],
+  showCaption: false,
+  dropZoneEnabled: true,
+  showClose: false,
+  initialPreview: ["{{ m.imagen.url }}"],
+  initialPreviewAsData: true,
+  initialPreviewFileType: "image",
+  overwriteInitial: true
+});
+</script>
+{% endblock %}

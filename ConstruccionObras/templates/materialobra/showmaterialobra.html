@@ -1,0 +1,70 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+
+<br><br><br><br><br>
+
+<center>
+    <h1>Materiales por Obra</h1>
+    <br>
+    <a class="btn btn-success" href="/newmaterialobra/">
+        <i class="bi bi-plus-circle"></i> Asignar Material
+    </a>
+</center>
+
+<br><br>
+
+<div class="container">
+    <table id="tbl_materialobra" class="table table-hover table-striped table-bordered text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Obra</th>
+                <th>Material</th>
+                <th>Unidad</th>
+                <th>Cant. Estimada</th>
+                <th>Cant. Real</th>
+                <th>Diferencia</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mo in data %}
+            <tr>
+                <td>{{ mo.obra.nombre_obra }}</td>
+                <td>{{ mo.material.nombre }}</td>
+                <td>{{ mo.material.unidad }}</td>
+                <td>{{ mo.cantidad_estimada }}</td>
+                <td>{{ mo.cantidad_real }}</td>
+                <td>
+                    {% if mo.cantidad_real > mo.cantidad_estimada %}
+                        <span class="badge bg-danger">+{{ mo.cantidad_real|add:"-"|add:mo.cantidad_estimada }}</span>
+                    {% else %}
+                        <span class="badge bg-success">OK</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/updatematerialobra/{{ mo.id_material_obra }}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="/deletematerialobra/{{ mo.id_material_obra }}"
+                       class="btn btn-danger btn-sm"
+                       onclick="confirmacion(event, this.href)">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+<script>
+new DataTable('#tbl_materialobra', {
+    layout: {
+        topStart: {
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
+        }
+    }
+});
+</script>
+</div>
+
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "principal/plantillaPrincipal.html" %}
+{% block contenido %}
+<br><br><br><br><br>
+<div class="container">
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            <h1>Nuevo Subcontratista</h1>
+            <hr>
+            <form action="/guardar_subcontratista/" method="POST" id="form_sub">
+                {% csrf_token %}
+
+                <b>Empresa:</b>
+                <input type="text" name="empresa" id="empresa" class="form-control mb-2" required>
+
+                <b>Especialidad:</b>
+                <input type="text" name="especialidad" id="especialidad" class="form-control mb-2" required>
+
+                <b>Teléfono:</b>
+                <input type="text" name="telefono" id="telefono" class="form-control mb-2" required>
+
+                <b>Email:</b>
+                <input type="email" name="email" id="email" class="form-control mb-2" required>
+
+                <b>Obra:</b>
+                <select name="obra" id="obra" class="form-control mb-2">
+                    {% for o in obras %}
+                    <option value="{{ o.id_obra }}">{{ o.nombre_obra }}</option>
+                    {% endfor %}
+                </select>
+
+                <br>
+                <div class="text-center">
+                    <button class="btn btn-success"><i class="bi bi-check-circle"></i> Guardar</button>
+                    <a href="/showsubcontratista/" class="btn btn-danger"><i class="bi bi-x-circle"></i> Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<br><br><br>
+
+<script>
+$("#form_sub").validate({
+    rules: {
+        empresa: { required: true, minlength: 2 },
+        especialidad: { required: true },
+        telefono: { required: true },
+        email: { required: true, email: true }
+    },
+    messages: {
+        empresa: { required: "Ingrese el nombre de la empresa" },
+        email: { email: "Ingrese un email válido" }
+    },
+    errorClass: "text-danger"
+});
+</script>
+
+{% endblock %}
