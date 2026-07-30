@@ -81,7 +81,7 @@ import os
 import dj_database_url
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('postgresql://craft_gwnt_user:bC52uKSCLwqaeV4itj2fdzdFWQ3gtmfY@dpg-d9lakhrm8hqs738ae9qg-a/craft_gwnt')
+        default=os.environ.get('DATABASE_URL')
     )
 }
 
