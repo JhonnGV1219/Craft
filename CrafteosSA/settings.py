@@ -75,15 +75,14 @@ WSGI_APPLICATION = 'CrafteosSA.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 
+
+from pathlib import Path
+import os
+import dj_database_url
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'craft',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('postgresql://craft_gwnt_user:bC52uKSCLwqaeV4itj2fdzdFWQ3gtmfY@dpg-d9lakhrm8hqs738ae9qg-a/craft_gwnt')
+    )
 }
 
 
