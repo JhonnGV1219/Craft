@@ -2,11 +2,9 @@
 {% load static %}
 {% block contenido %}
 <br><br><br><br><br>
-
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-lg-7 col-md-9">
-
       <div class="card shadow-sm border-0">
         <div class="card-header bg-warning text-dark">
           <h5 class="mb-0">
@@ -15,54 +13,53 @@
           </h5>
         </div>
         <div class="card-body p-4">
-
           <form enctype="multipart/form-data" action="/procesoupobra/"
-                method="post">
+                method="post" id="form_edit_obra">
             {% csrf_token %}
             <input type="hidden" name="id_obra" value="{{ obras.id_obra }}">
-
             <div class="row g-3">
+
               <div class="col-12">
-                <label class="form-label fw-semibold">Nombre de la Obra</label>
-                <input type="text" name="nombre" class="form-control"
-                       value="{{ obras.nombre_obra }}" required>
+                <label class="form-label fw-semibold">Nombre de la Obra <span class="text-danger">*</span></label>
+                <input type="text" name="nombre" id="nombre" class="form-control"
+                       value="{{ obras.nombre_obra }}" maxlength="50">
               </div>
 
               <div class="col-12">
-                <label class="form-label fw-semibold">Descripción</label>
-                <textarea name="descripcion" class="form-control"
-                          rows="2" required>{{ obras.descripcion }}</textarea>
+                <label class="form-label fw-semibold">Descripción <span class="text-danger">*</span></label>
+                <textarea name="descripcion" id="descripcion" class="form-control"
+                          rows="2">{{ obras.descripcion }}</textarea>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label fw-semibold">Fecha de Inicio</label>
                 <input type="date" name="fecha_in" class="form-control"
                        value="{{ obras.fecha_inicio|date:'Y-m-d' }}" readonly>
-                <small class="text-muted">La fecha de inicio no puede modificarse.</small>
+                <small class="text-muted">No puede modificarse.</small>
               </div>
 
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Fecha Fin Estimada</label>
-                <input type="date" name="fecha_fin" class="form-control"
-                       value="{{ obras.fecha_fin_estimado|date:'Y-m-d' }}" required>
+                <label class="form-label fw-semibold">Fecha Fin Estimada <span class="text-danger">*</span></label>
+                <input type="date" name="fecha_fin" id="fecha_fin" class="form-control"
+                       value="{{ obras.fecha_fin_estimado|date:'Y-m-d' }}">
               </div>
 
               <div class="col-md-6">
                 <label class="form-label fw-semibold">Presupuesto Total ($)</label>
                 <div class="input-group">
                   <span class="input-group-text">$</span>
-                  <input type="number" name="presupuesto" class="form-control"
+                  <input type="number" name="presupuesto" id="presupuesto" class="form-control"
                          value="{{ obras.presupuesto_total }}" step="0.01" min="0">
                 </div>
               </div>
 
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Estado</label>
+                <label class="form-label fw-semibold">Estado <span class="text-danger">*</span></label>
                 <select name="estado" class="form-select">
-                  <option value="Planificada"   {% if obras.estado == "Planificada"   %}selected{% endif %}>Planificada</option>
-                  <option value="En ejecucion"  {% if obras.estado == "En ejecucion"  %}selected{% endif %}>En Ejecución</option>
-                  <option value="Finalizada"    {% if obras.estado == "Finalizada"    %}selected{% endif %}>Finalizada</option>
-                  <option value="Suspendida"    {% if obras.estado == "Suspendida"    %}selected{% endif %}>Suspendida</option>
+                  <option value="Planificada"  {% if obras.estado == "Planificada"  %}selected{% endif %}>Planificada</option>
+                  <option value="En ejecucion" {% if obras.estado == "En ejecucion" %}selected{% endif %}>En Ejecución</option>
+                  <option value="Finalizada"   {% if obras.estado == "Finalizada"   %}selected{% endif %}>Finalizada</option>
+                  <option value="Suspendida"   {% if obras.estado == "Suspendida"   %}selected{% endif %}>Suspendida</option>
                 </select>
               </div>
 
@@ -70,8 +67,8 @@
                 <label class="form-label fw-semibold">Plano (PDF)</label>
                 <input type="file" name="plano" id="plano" class="form-control">
               </div>
-            </div>
 
+            </div>
             <hr>
             <div class="d-flex justify-content-end gap-2">
               <a href="/showobras/" class="btn btn-outline-secondary">
@@ -81,11 +78,9 @@
                 <i class="bi bi-check-circle"></i> Actualizar Obra
               </button>
             </div>
-
           </form>
         </div>
       </div>
-
     </div>
   </div>
 </div>
@@ -94,16 +89,30 @@
 <script>
 var pdfactual = "{% if obras.plano %}{{ obras.plano.url }}{% endif %}";
 $("#plano").fileinput({
-  language: "es",
-  allowedFileExtensions: ["pdf"],
-  showCaption: false,
-  dropZoneEnabled: true,
-  showClose: false,
-  showUpload: false,
+  language: "es", allowedFileExtensions: ["pdf"],
+  showCaption: false, dropZoneEnabled: true,
+  showClose: false, showUpload: false,
   initialPreview: pdfactual ? [pdfactual] : [],
-  initialPreviewAsData: true,
-  initialPreviewFileType: "pdf"
+  initialPreviewAsData: true, initialPreviewFileType: "pdf"
 });
 $(".fileinput-upload").hide();
+
+$("#form_edit_obra").validate({
+  rules: {
+    nombre      : { required: true, minlength: 3, maxlength: 50 },
+    descripcion : { required: true, minlength: 5 },
+    fecha_fin   : { required: true, date: true },
+    presupuesto : { min: 0, number: true }
+  },
+  messages: {
+    nombre      : { required: "El nombre es obligatorio", minlength: "Mínimo 3 caracteres" },
+    descripcion : { required: "La descripción es obligatoria" },
+    fecha_fin   : { required: "Seleccione la fecha fin", date: "Formato inválido" },
+    presupuesto : { min: "No puede ser negativo", number: "Número inválido" }
+  },
+  errorClass: "text-danger small", errorElement: "div",
+  highlight: function(el){ $(el).addClass("is-invalid"); },
+  unhighlight: function(el){ $(el).removeClass("is-invalid"); }
+});
 </script>
 {% endblock %}

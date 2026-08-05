@@ -1,11 +1,9 @@
 {% extends "principal/plantillaPrincipal.html" %}
 {% block contenido %}
 <br><br><br><br><br>
-
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-lg-7 col-md-9">
-
       <div class="card shadow-sm border-0">
         <div class="card-header bg-warning text-dark">
           <h5 class="mb-0">
@@ -14,27 +12,26 @@
           </h5>
         </div>
         <div class="card-body p-4">
-
           <form action="/procesoupmaquinaria/" method="POST"
-                enctype="multipart/form-data">
+                enctype="multipart/form-data" id="form_edit_maq">
             {% csrf_token %}
             <input type="hidden" name="id" value="{{ m.id_maquinaria }}">
-
             <div class="row g-3">
+
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Nombre</label>
-                <input type="text" name="nombre" class="form-control"
-                       value="{{ m.nombre_maquinaria }}" required>
+                <label class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
+                <input type="text" name="nombre" id="nombre" class="form-control"
+                       value="{{ m.nombre_maquinaria }}" maxlength="50">
               </div>
 
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Tipo</label>
-                <input type="text" name="tipo" class="form-control"
-                       value="{{ m.tipo_maquinaria }}" required>
+                <label class="form-label fw-semibold">Tipo <span class="text-danger">*</span></label>
+                <input type="text" name="tipo" id="tipo" class="form-control"
+                       value="{{ m.tipo_maquinaria }}" maxlength="50">
               </div>
 
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Estado</label>
+                <label class="form-label fw-semibold">Estado <span class="text-danger">*</span></label>
                 <select name="estado" class="form-select">
                   <option value="disponible"    {% if m.estado == "disponible"    %}selected{% endif %}>Disponible</option>
                   <option value="en_uso"        {% if m.estado == "en_uso"        %}selected{% endif %}>En Uso</option>
@@ -71,9 +68,10 @@
               <div class="col-12">
                 <label class="form-label fw-semibold">Imagen</label>
                 <input type="file" name="imagen" id="imagen" class="form-control">
+                <small class="text-muted">Formatos: PNG, JPG, JPEG</small>
               </div>
-            </div>
 
+            </div>
             <hr>
             <div class="d-flex justify-content-end gap-2">
               <a href="/showmaquinaria/" class="btn btn-outline-secondary">
@@ -83,27 +81,36 @@
                 <i class="bi bi-check-circle"></i> Actualizar
               </button>
             </div>
-
           </form>
         </div>
       </div>
-
     </div>
   </div>
 </div>
 <br><br>
 
 <script>
+var imgActual = "{% if m.imagen %}{{ m.imagen.url }}{% endif %}";
 $("#imagen").fileinput({
-  language: "es",
-  allowedFileExtensions: ["png", "jpg", "jpeg"],
-  showCaption: false,
-  dropZoneEnabled: true,
-  showClose: false,
-  initialPreview: ["{{ m.imagen.url }}"],
-  initialPreviewAsData: true,
-  initialPreviewFileType: "image",
+  language: "es", allowedFileExtensions: ["png","jpg","jpeg"],
+  showCaption: false, dropZoneEnabled: true, showClose: false,
+  initialPreview: imgActual ? [imgActual] : [],
+  initialPreviewAsData: true, initialPreviewFileType: "image",
   overwriteInitial: true
+});
+
+$("#form_edit_maq").validate({
+  rules: {
+    nombre : { required: true, minlength: 2, maxlength: 50 },
+    tipo   : { required: true, minlength: 2, maxlength: 50 }
+  },
+  messages: {
+    nombre : { required: "El nombre es obligatorio" },
+    tipo   : { required: "El tipo es obligatorio" }
+  },
+  errorClass: "text-danger small", errorElement: "div",
+  highlight: function(el){ $(el).addClass("is-invalid"); },
+  unhighlight: function(el){ $(el).removeClass("is-invalid"); }
 });
 </script>
 {% endblock %}

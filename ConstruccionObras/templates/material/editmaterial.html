@@ -2,32 +2,65 @@
 {% block contenido %}
 <br><br><br><br><br>
 <div class="container">
-    <div class="row">
-        <div class="col-md-3"></div>
-
-        <div class="col-md-6">
-            <h1>Editar Material</h1>
-            <hr>
-
-            <form action="/procesoupmaterial/" method="POST">
-                {% csrf_token %}
-
-                <input type="hidden" name="id" value="{{ m.id_material }}">
-
-                <b>Nombre:</b>
-                <input type="text" name="nombre" class="form-control" value="{{ m.nombre }}">
-
-                <b>Unidad:</b>
-                <input type="text" name="unidad" class="form-control" value="{{ m.unidad }}">
-
-                <br>
-                <div class="text-center">
-                    <button class="btn btn-success">Actualizar</button>
-                    <a href="/showmaterial/" class="btn btn-danger">Cancelar</a>
-                </div>
-            </form>
+  <div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0">
+            <i class="bi bi-pencil-square me-2"></i>Editar Material —
+            <span class="fw-normal">{{ m.nombre }}</span>
+          </h5>
         </div>
-    </div>
-</div>
+        <div class="card-body p-4">
+          <form action="/procesoupmaterial/" method="POST" id="form_edit_material">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ m.id_material }}">
+            <div class="row g-3">
 
+              <div class="col-12">
+                <label class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
+                <input type="text" name="nombre" id="nombre" class="form-control"
+                       value="{{ m.nombre }}" maxlength="100">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Unidad de medida <span class="text-danger">*</span></label>
+                <input type="text" name="unidad" id="unidad" class="form-control"
+                       value="{{ m.unidad }}" maxlength="20">
+                <small class="text-muted">Ej: kg, m3, unidades, lt</small>
+              </div>
+
+            </div>
+            <hr>
+            <div class="d-flex justify-content-end gap-2">
+              <a href="/showmaterial/" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+              </a>
+              <button type="submit" class="btn btn-warning">
+                <i class="bi bi-check-circle"></i> Actualizar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<br><br>
+
+<script>
+$("#form_edit_material").validate({
+  rules: {
+    nombre : { required: true, minlength: 2, maxlength: 100 },
+    unidad : { required: true, minlength: 1, maxlength: 20 }
+  },
+  messages: {
+    nombre : { required: "El nombre es obligatorio", minlength: "Mínimo 2 caracteres" },
+    unidad : { required: "La unidad es obligatoria" }
+  },
+  errorClass: "text-danger small", errorElement: "div",
+  highlight: function(el){ $(el).addClass("is-invalid"); },
+  unhighlight: function(el){ $(el).removeClass("is-invalid"); }
+});
+</script>
 {% endblock %}

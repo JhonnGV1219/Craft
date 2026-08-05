@@ -2,44 +2,94 @@
 {% block contenido %}
 <br><br><br><br><br>
 <div class="container">
-    <div class="row">
-        <div class="col-md-3"></div>
-        <div class="col-md-6">
-            <h1>Editar Subcontratista</h1>
-            <hr>
-            <form action="/procesoupsubcontratista/" method="POST">
-                {% csrf_token %}
-                <input type="hidden" name="id" value="{{ s.id_subcontratista }}">
-
-                <b>Empresa:</b>
-                <input type="text" name="empresa" class="form-control mb-2" value="{{ s.nombre_empresa }}" required>
-
-                <b>Especialidad:</b>
-                <input type="text" name="especialidad" class="form-control mb-2" value="{{ s.especialidad }}" required>
-
-                <b>Teléfono:</b>
-                <input type="text" name="telefono" class="form-control mb-2" value="{{ s.telefono }}" required>
-
-                <b>Email:</b>
-                <input type="email" name="email" class="form-control mb-2" value="{{ s.email }}" required>
-
-                <b>Obra:</b>
-                <select name="obra" class="form-control mb-2">
-                    {% for o in obras %}
-                    <option value="{{ o.id_obra }}" {% if o.id_obra == s.obra_id.id_obra %}selected{% endif %}>
-                        {{ o.nombre_obra }}
-                    </option>
-                    {% endfor %}
-                </select>
-
-                <br>
-                <div class="text-center">
-                    <button class="btn btn-success"><i class="bi bi-check-circle"></i> Actualizar</button>
-                    <a href="/showsubcontratista/" class="btn btn-danger"><i class="bi bi-x-circle"></i> Cancelar</a>
-                </div>
-            </form>
+  <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0">
+            <i class="bi bi-pencil-square me-2"></i>Editar Subcontratista —
+            <span class="fw-normal">{{ s.nombre_empresa }}</span>
+          </h5>
         </div>
+        <div class="card-body p-4">
+          <form action="/procesoupsubcontratista/" method="POST" id="form_edit_sub">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ s.id_subcontratista }}">
+            <div class="row g-3">
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Empresa <span class="text-danger">*</span></label>
+                <input type="text" name="empresa" id="empresa" class="form-control"
+                       value="{{ s.nombre_empresa }}" maxlength="100">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Especialidad <span class="text-danger">*</span></label>
+                <input type="text" name="especialidad" id="especialidad" class="form-control"
+                       value="{{ s.especialidad }}" maxlength="100">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Teléfono <span class="text-danger">*</span></label>
+                <input type="text" name="telefono" id="telefono" class="form-control"
+                       value="{{ s.telefono }}" maxlength="20">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                <input type="email" name="email" id="email" class="form-control"
+                       value="{{ s.email }}">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Obra asignada <span class="text-danger">*</span></label>
+                <select name="obra" id="obra" class="form-select">
+                  {% for o in obras %}
+                  <option value="{{ o.id_obra }}"
+                    {% if o.id_obra == s.obra_id.id_obra %}selected{% endif %}>
+                    {{ o.nombre_obra }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+            </div>
+            <hr>
+            <div class="d-flex justify-content-end gap-2">
+              <a href="/showsubcontratista/" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+              </a>
+              <button type="submit" class="btn btn-warning">
+                <i class="bi bi-check-circle"></i> Actualizar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
-<br><br><br>
+<br><br>
+
+<script>
+$("#form_edit_sub").validate({
+  rules: {
+    empresa      : { required: true, minlength: 2, maxlength: 100 },
+    especialidad : { required: true, minlength: 3, maxlength: 100 },
+    telefono     : { required: true, minlength: 7, maxlength: 20 },
+    email        : { required: true, email: true },
+    obra         : { required: true }
+  },
+  messages: {
+    empresa      : { required: "El nombre es obligatorio" },
+    especialidad : { required: "La especialidad es obligatoria" },
+    telefono     : { required: "El teléfono es obligatorio", minlength: "Mínimo 7 dígitos" },
+    email        : { required: "El email es obligatorio", email: "Formato de email inválido" },
+    obra         : { required: "Seleccione una obra" }
+  },
+  errorClass: "text-danger small", errorElement: "div",
+  highlight: function(el){ $(el).addClass("is-invalid"); },
+  unhighlight: function(el){ $(el).removeClass("is-invalid"); }
+});
+</script>
 {% endblock %}

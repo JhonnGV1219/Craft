@@ -2,58 +2,88 @@
 {% block contenido %}
 <br><br><br><br><br>
 <div class="container">
-    <div class="row">
-        <div class="col-md-3"></div>
-        <div class="col-md-6">
-            <h1>Nuevo Subcontratista</h1>
-            <hr>
-            <form action="/guardar_subcontratista/" method="POST" id="form_sub">
-                {% csrf_token %}
-
-                <b>Empresa:</b>
-                <input type="text" name="empresa" id="empresa" class="form-control mb-2" required>
-
-                <b>Especialidad:</b>
-                <input type="text" name="especialidad" id="especialidad" class="form-control mb-2" required>
-
-                <b>Teléfono:</b>
-                <input type="text" name="telefono" id="telefono" class="form-control mb-2" required>
-
-                <b>Email:</b>
-                <input type="email" name="email" id="email" class="form-control mb-2" required>
-
-                <b>Obra:</b>
-                <select name="obra" id="obra" class="form-control mb-2">
-                    {% for o in obras %}
-                    <option value="{{ o.id_obra }}">{{ o.nombre_obra }}</option>
-                    {% endfor %}
-                </select>
-
-                <br>
-                <div class="text-center">
-                    <button class="btn btn-success"><i class="bi bi-check-circle"></i> Guardar</button>
-                    <a href="/showsubcontratista/" class="btn btn-danger"><i class="bi bi-x-circle"></i> Cancelar</a>
-                </div>
-            </form>
+  <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+          <h5 class="mb-0"><i class="bi bi-person-plus me-2"></i>Nuevo Subcontratista</h5>
         </div>
+        <div class="card-body p-4">
+          <form action="/guardar_subcontratista/" method="POST" id="form_sub">
+            {% csrf_token %}
+            <div class="row g-3">
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Empresa <span class="text-danger">*</span></label>
+                <input type="text" name="empresa" id="empresa" class="form-control"
+                       placeholder="Razón social o nombre comercial" maxlength="100">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Especialidad <span class="text-danger">*</span></label>
+                <input type="text" name="especialidad" id="especialidad" class="form-control"
+                       placeholder="Ej: Estructuras metálicas, Electricidad..." maxlength="100">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Teléfono <span class="text-danger">*</span></label>
+                <input type="text" name="telefono" id="telefono" class="form-control"
+                       placeholder="Ej: +57 300 123 4567" maxlength="20">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                <input type="email" name="email" id="email" class="form-control"
+                       placeholder="contacto@empresa.com">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Obra asignada <span class="text-danger">*</span></label>
+                <select name="obra" id="obra" class="form-select">
+                  <option value="" disabled selected>— Seleccione una obra —</option>
+                  {% for o in obras %}
+                  <option value="{{ o.id_obra }}">{{ o.nombre_obra }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+            </div>
+            <hr>
+            <div class="d-flex justify-content-end gap-2">
+              <a href="/showsubcontratista/" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+              </a>
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Guardar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
-<br><br><br>
+<br><br>
 
 <script>
 $("#form_sub").validate({
-    rules: {
-        empresa: { required: true, minlength: 2 },
-        especialidad: { required: true },
-        telefono: { required: true },
-        email: { required: true, email: true }
-    },
-    messages: {
-        empresa: { required: "Ingrese el nombre de la empresa" },
-        email: { email: "Ingrese un email válido" }
-    },
-    errorClass: "text-danger"
+  rules: {
+    empresa      : { required: true, minlength: 2, maxlength: 100 },
+    especialidad : { required: true, minlength: 3, maxlength: 100 },
+    telefono     : { required: true, minlength: 7, maxlength: 20 },
+    email        : { required: true, email: true },
+    obra         : { required: true }
+  },
+  messages: {
+    empresa      : { required: "El nombre de la empresa es obligatorio", minlength: "Mínimo 2 caracteres" },
+    especialidad : { required: "La especialidad es obligatoria" },
+    telefono     : { required: "El teléfono es obligatorio", minlength: "Mínimo 7 dígitos" },
+    email        : { required: "El email es obligatorio", email: "Formato de email inválido" },
+    obra         : { required: "Seleccione una obra" }
+  },
+  errorClass: "text-danger small", errorElement: "div",
+  highlight: function(el){ $(el).addClass("is-invalid"); },
+  unhighlight: function(el){ $(el).removeClass("is-invalid"); }
 });
 </script>
-
 {% endblock %}

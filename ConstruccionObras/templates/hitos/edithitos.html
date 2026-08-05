@@ -2,11 +2,9 @@
 {% load static %}
 {% block contenido %}
 <br><br><br><br><br>
-
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-lg-7 col-md-9">
-
       <div class="card shadow-sm border-0">
         <div class="card-header bg-warning text-dark">
           <h5 class="mb-0">
@@ -15,43 +13,41 @@
           </h5>
         </div>
         <div class="card-body p-4">
-
           <form enctype="multipart/form-data" action="/procesouphito/"
-                method="post">
+                method="post" id="form_edit_hito">
             {% csrf_token %}
             <input type="hidden" name="id_hito" value="{{ hitos.id_hito }}">
-
             <div class="row g-3">
-              <div class="col-12">
-                <label class="form-label fw-semibold">Nombre del Hito</label>
-                <input type="text" name="nombre" class="form-control"
-                       value="{{ hitos.nombre_hito }}" required>
-              </div>
 
               <div class="col-12">
-                <label class="form-label fw-semibold">Descripción</label>
-                <textarea name="descripcion" class="form-control"
-                          rows="2" required>{{ hitos.descripcion }}</textarea>
+                <label class="form-label fw-semibold">Nombre del Hito <span class="text-danger">*</span></label>
+                <input type="text" name="nombre" id="nombre" class="form-control"
+                       value="{{ hitos.nombre_hito }}" maxlength="50">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Descripción <span class="text-danger">*</span></label>
+                <textarea name="descripcion" id="descripcion" class="form-control"
+                          rows="2">{{ hitos.descripcion }}</textarea>
               </div>
 
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Fecha de Inicio</label>
-                <input type="date" name="fecha_in" class="form-control"
-                       value="{{ hitos.fecha_inicio|date:'Y-m-d' }}" required>
+                <label class="form-label fw-semibold">Fecha de Inicio <span class="text-danger">*</span></label>
+                <input type="date" name="fecha_in" id="fecha_in" class="form-control"
+                       value="{{ hitos.fecha_inicio|date:'Y-m-d' }}">
               </div>
 
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Fecha Fin Estimada</label>
-                <input type="date" name="fecha_fin" class="form-control"
-                       value="{{ hitos.fecha_fin_estimado|date:'Y-m-d' }}" required>
+                <label class="form-label fw-semibold">Fecha Fin Estimada <span class="text-danger">*</span></label>
+                <input type="date" name="fecha_fin" id="fecha_fin" class="form-control"
+                       value="{{ hitos.fecha_fin_estimado|date:'Y-m-d' }}">
               </div>
 
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Avance (%)</label>
+                <label class="form-label fw-semibold">Avance (%) <span class="text-danger">*</span></label>
                 <div class="input-group">
-                  <input type="number" name="avance" class="form-control"
-                         value="{{ hitos.avance_porcentaje }}"
-                         step="0.1" min="0" max="100" required>
+                  <input type="number" name="avance" id="avance" class="form-control"
+                         value="{{ hitos.avance_porcentaje }}" step="0.1" min="0" max="100">
                   <span class="input-group-text">%</span>
                 </div>
               </div>
@@ -66,8 +62,8 @@
               </div>
 
               <div class="col-12">
-                <label class="form-label fw-semibold">Obra asociada</label>
-                <select name="obra" class="form-select" required>
+                <label class="form-label fw-semibold">Obra asociada <span class="text-danger">*</span></label>
+                <select name="obra" id="obra" class="form-select">
                   {% for p in miobra %}
                   <option value="{{ p.id_obra }}"
                     {% if p.id_obra == hitos.obra_id_id %}selected{% endif %}>
@@ -81,8 +77,8 @@
                 <label class="form-label fw-semibold">Evidencia (PDF)</label>
                 <input type="file" name="evidencias" id="evidencias" class="form-control">
               </div>
-            </div>
 
+            </div>
             <hr>
             <div class="d-flex justify-content-end gap-2">
               <a href="/showhitos/" class="btn btn-outline-secondary">
@@ -92,11 +88,9 @@
                 <i class="bi bi-check-circle"></i> Actualizar Hito
               </button>
             </div>
-
           </form>
         </div>
       </div>
-
     </div>
   </div>
 </div>
@@ -105,16 +99,38 @@
 <script>
 var pdfactual = "{% if hitos.evidencia %}{{ hitos.evidencia.url }}{% endif %}";
 $("#evidencias").fileinput({
-  language: "es",
-  allowedFileExtensions: ["pdf"],
-  showCaption: false,
-  dropZoneEnabled: true,
-  showClose: false,
-  showUpload: false,
+  language: "es", allowedFileExtensions: ["pdf"],
+  showCaption: false, dropZoneEnabled: true,
+  showClose: false, showUpload: false,
   initialPreview: pdfactual ? [pdfactual] : [],
-  initialPreviewAsData: true,
-  initialPreviewFileType: "pdf"
+  initialPreviewAsData: true, initialPreviewFileType: "pdf"
 });
 $(".fileinput-upload").hide();
+
+$.validator.addMethod("greaterThan", function(value, element, param) {
+  var start = $(param).val();
+  return !start || !value || value > start;
+}, "Debe ser posterior a la fecha de inicio");
+
+$("#form_edit_hito").validate({
+  rules: {
+    nombre      : { required: true, minlength: 3, maxlength: 50 },
+    descripcion : { required: true, minlength: 5 },
+    fecha_in    : { required: true, date: true },
+    fecha_fin   : { required: true, date: true, greaterThan: "#fecha_in" },
+    avance      : { required: true, number: true, min: 0, max: 100 },
+    obra        : { required: true }
+  },
+  messages: {
+    nombre      : { required: "El nombre es obligatorio" },
+    descripcion : { required: "La descripción es obligatoria" },
+    fecha_fin   : { greaterThan: "Debe ser posterior a la fecha de inicio" },
+    avance      : { min: "No puede ser negativo", max: "No puede superar 100 %" },
+    obra        : { required: "Seleccione una obra" }
+  },
+  errorClass: "text-danger small", errorElement: "div",
+  highlight: function(el){ $(el).addClass("is-invalid"); },
+  unhighlight: function(el){ $(el).removeClass("is-invalid"); }
+});
 </script>
 {% endblock %}

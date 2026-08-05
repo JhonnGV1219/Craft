@@ -1,50 +1,47 @@
 {% extends "principal/plantillaPrincipal.html" %}
 {% block contenido %}
 <br><br><br><br><br>
-
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-lg-6 col-md-8">
-
       <div class="card shadow-sm border-0">
         <div class="card-header bg-dark text-white">
           <h5 class="mb-0"><i class="bi bi-people me-2"></i>Registro de Cuadrilla</h5>
         </div>
         <div class="card-body p-4">
-
-          <form action="/guardar_cuadrilla/" method="post">
+          <form action="/guardar_cuadrilla/" method="post" id="form_cuadrilla">
             {% csrf_token %}
-
             <div class="row g-3">
+
               <div class="col-12">
-                <label class="form-label fw-semibold">Nombre de la Cuadrilla</label>
-                <input type="text" name="nombre" class="form-control"
-                       placeholder="Ej: Cuadrilla Estructural A" required>
+                <label class="form-label fw-semibold">Nombre de la Cuadrilla <span class="text-danger">*</span></label>
+                <input type="text" name="nombre" id="nombre" class="form-control"
+                       placeholder="Ej: Cuadrilla Estructural A" maxlength="50">
               </div>
 
               <div class="col-12">
-                <label class="form-label fw-semibold">Tipo de Trabajo</label>
-                <input type="text" name="tipo" class="form-control"
-                       placeholder="Ej: Carpintería, Concreto, Acabados..." required>
+                <label class="form-label fw-semibold">Tipo de Trabajo <span class="text-danger">*</span></label>
+                <input type="text" name="tipo" id="tipo" class="form-control"
+                       placeholder="Ej: Carpintería, Concreto, Acabados..." maxlength="50">
               </div>
 
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Cantidad de Trabajadores</label>
-                <input type="number" name="cantidad" class="form-control"
-                       min="1" placeholder="0" required>
+                <label class="form-label fw-semibold">Cantidad de Trabajadores <span class="text-danger">*</span></label>
+                <input type="number" name="cantidad" id="cantidad" class="form-control"
+                       min="1" max="500" placeholder="0">
               </div>
 
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Obra asignada</label>
-                <select name="obra" class="form-select" required>
+                <label class="form-label fw-semibold">Obra asignada <span class="text-danger">*</span></label>
+                <select name="obra" id="obra" class="form-select">
                   <option value="" disabled selected>— Seleccione —</option>
                   {% for o in obras %}
                   <option value="{{ o.id_obra }}">{{ o.nombre_obra }}</option>
                   {% endfor %}
                 </select>
               </div>
-            </div>
 
+            </div>
             <hr>
             <div class="d-flex justify-content-end gap-2">
               <a href="/showcuadrilla/" class="btn btn-outline-secondary">
@@ -54,13 +51,31 @@
                 <i class="bi bi-check-circle"></i> Guardar
               </button>
             </div>
-
           </form>
         </div>
       </div>
-
     </div>
   </div>
 </div>
 <br><br>
+
+<script>
+$("#form_cuadrilla").validate({
+  rules: {
+    nombre   : { required: true, minlength: 3, maxlength: 50 },
+    tipo     : { required: true, minlength: 3, maxlength: 50 },
+    cantidad : { required: true, digits: true, min: 1, max: 500 },
+    obra     : { required: true }
+  },
+  messages: {
+    nombre   : { required: "El nombre es obligatorio", minlength: "Mínimo 3 caracteres" },
+    tipo     : { required: "El tipo de trabajo es obligatorio" },
+    cantidad : { required: "La cantidad es obligatoria", digits: "Solo números enteros", min: "Mínimo 1 trabajador", max: "Máximo 500 trabajadores" },
+    obra     : { required: "Seleccione una obra" }
+  },
+  errorClass: "text-danger small", errorElement: "div",
+  highlight: function(el){ $(el).addClass("is-invalid"); },
+  unhighlight: function(el){ $(el).removeClass("is-invalid"); }
+});
+</script>
 {% endblock %}
