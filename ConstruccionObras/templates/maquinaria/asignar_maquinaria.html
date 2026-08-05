@@ -163,21 +163,7 @@
                     id="form-{{ obra.id_obra }}">
                 {% csrf_token %}
                 <input type="hidden" name="obra_id" value="{{ obra.id_obra }}">
-                <!-- inputs de maquinaria se inyectan por JS -->
                 <div class="maq-inputs"></div>
-
-                <!-- Select de hito (inicialmente oculto) -->
-                <div class="mb-2 hito-select-wrapper" style="display:none;">
-                  <label class="form-label fw-semibold small mb-1">
-                    <i class="bi bi-flag me-1"></i>Hito de esta obra <span class="text-danger">*</span>
-                  </label>
-                  <select name="hito_id" class="form-select form-select-sm hito-select"
-                          data-obra-id="{{ obra.id_obra }}">
-                    <option value="">— Seleccione un hito —</option>
-                  </select>
-                  <small class="text-muted">La maquinaria quedará vinculada a este hito.</small>
-                </div>
-
                 <button type="submit"
                         class="btn btn-primary btn-sm w-100 btn-guardar-asign">
                   <i class="bi bi-floppy"></i> Guardar asignación
@@ -200,10 +186,7 @@
   </div>
 </div>
 
-<!-- Hitos por obra en JSON para poblar los selects -->
-<script>
-var hitosPorObra = {{ hitos_por_obra|safe }};
-</script>
+<!-- Fin del contenido -->
 
 <script>
 /* ═══════════════════════════════════════════════
@@ -294,9 +277,6 @@ document.querySelectorAll('.frente-drop').forEach(function(zona) {
       inputs.appendChild(inp);
     }
 
-    // Poblar y mostrar el select de hitos de esta obra
-    poblarHitos(obraId);
-
     form.querySelector('.btn-guardar-asign').style.display = 'block';
     actualizarContador();
     dragId = null;
@@ -335,9 +315,7 @@ document.addEventListener('click', function(e) {
 
   if (!zona.querySelector('.maq-card')) {
     zona.querySelector('.placeholder-txt').style.display = '';
-    // Ocultar select de hito si no quedan máquinas
-    form.querySelector('.hito-select-wrapper').style.display = 'none';
-    form.querySelector('.btn-guardar-asign').style.display   = 'none';
+    form.querySelector('.btn-guardar-asign').style.display = 'none';
   }
 
   devolverAlPool(id, nombre, tipo);
@@ -364,25 +342,6 @@ function devolverAlPool(id, nombre, tipo) {
   if (mv) mv.remove();
   pool.appendChild(back);
   actualizarContador();
-}
-
-function poblarHitos(obraId) {
-  const hitos  = hitosPorObra[obraId] || [];
-  const form   = document.getElementById('form-' + obraId);
-  const sel    = form.querySelector('.hito-select');
-  const wrapper = form.querySelector('.hito-select-wrapper');
-
-  // Limpiar y re-poblar
-  sel.innerHTML = '<option value="">— Seleccione un hito —</option>';
-  hitos.forEach(function(h) {
-    const opt   = document.createElement('option');
-    opt.value   = h.id_hito;
-    opt.textContent = h.nombre_hito;
-    sel.appendChild(opt);
-  });
-
-  // Mostrar el wrapper
-  wrapper.style.display = hitos.length > 0 ? 'block' : 'none';
 }
 
 function actualizarContador() {

@@ -549,33 +549,31 @@ def asignar_maquinaria(request):
     maquinaria_disponible = Maquinaria_Pesada.objects.filter(estado='disponible')
     maquinaria_en_uso     = Maquinaria_Pesada.objects.filter(estado='en_uso')
     obras = Obra.objects.exclude(estado='Finalizada')
-
-    # Hitos agrupados por obra para pasarlos al template como JSON
-    import json
-    hitos_por_obra = {}
-    for obra in obras:
-        hitos_obra = Hitos.objects.filter(obra_id=obra).values('id_hito', 'nombre_hito')
-        hitos_por_obra[str(obra.id_obra)] = list(hitos_obra)
-
     return render(request, 'maquinaria/asignar_maquinaria.html', {
-        'disponible'     : maquinaria_disponible,
-        'en_uso'         : maquinaria_en_uso,
-        'obras'          : obras,
-        'hitos_por_obra' : json.dumps(hitos_por_obra),
+        'disponible' : maquinaria_disponible,
+        'en_uso'     : maquinaria_en_uso,
+        'obras'      : obras,
     })
 
 
 def guardar_asignacion_maquinaria(request):
     if request.method == 'POST':
         maquinaria_ids = request.POST.getlist('maquinaria_ids[]')
-        obra_id  = request.POST.get('obra_id')
-        hito_id  = request.POST.get('hito_id') or None
+        obra_id        = request.POST.get('obra_id')
         if obra_id and maquinaria_ids:
+            # Determinar el hito automáticamente:
+            # 1° hito "En progreso" de la obra, si no hay, el primer hito registrado
+            hito = (
+                Hitos.objects.filter(obra_id_id=obra_id, estado='En progreso')
+                .first()
+                or
+                Hitos.objects.filter(obra_id_id=obra_id).first()
+            )
             for mid in maquinaria_ids:
                 try:
                     m = Maquinaria_Pesada.objects.get(id_maquinaria=int(mid))
                     m.obra_id_id = int(obra_id)
-                    m.id_hito_id = int(hito_id) if hito_id else None
+                    m.id_hito_id = hito.id_hito if hito else None
                     m.estado     = 'en_uso'
                     m.save()
                 except Maquinaria_Pesada.DoesNotExist:
