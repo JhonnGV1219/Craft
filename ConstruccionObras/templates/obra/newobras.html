@@ -96,19 +96,24 @@ $.validator.addMethod("greaterThan", function(value, element, param) {
   return !isNaN(startDate) && !isNaN(endDate) && endDate > startDate;
 }, "La fecha de fin debe ser posterior a la fecha de inicio");
 
+/* dateISO coincide con YYYY-MM-DD que entrega type="date" */
+$.validator.addMethod("dateISO", function(value, element) {
+  return this.optional(element) || /^\d{4}-\d{2}-\d{2}$/.test(value);
+}, "Formato de fecha inválido");
+
 $("#form_obra").validate({
   rules: {
     nombre      : { required: true, minlength: 3, maxlength: 50 },
     descripcion : { required: true, minlength: 5 },
-    fecha_in    : { required: true, date: true },
-    fecha_fin   : { required: true, date: true, greaterThan: "#fecha_in" },
+    fecha_in    : { required: true, dateISO: true },
+    fecha_fin   : { required: true, dateISO: true, greaterThan: "#fecha_in" },
     presupuesto : { min: 0, number: true }
   },
   messages: {
     nombre      : { required: "El nombre es obligatorio", minlength: "Mínimo 3 caracteres", maxlength: "Máximo 50 caracteres" },
     descripcion : { required: "La descripción es obligatoria" },
-    fecha_in    : { required: "Seleccione la fecha de inicio", date: "Formato de fecha inválido" },
-    fecha_fin   : { required: "Seleccione la fecha fin", greaterThan: "Debe ser posterior a la fecha de inicio" },
+    fecha_in    : { required: "Seleccione la fecha de inicio" },
+    fecha_fin   : { required: "Seleccione la fecha de fin", greaterThan: "La fecha fin debe ser posterior a la fecha de inicio" },
     presupuesto : { min: "El presupuesto no puede ser negativo", number: "Ingrese un número válido" }
   },
   errorClass: "text-danger small",

@@ -33,7 +33,7 @@
 
               <div class="col-md-6">
                 <label class="form-label fw-semibold">Fecha de Inicio</label>
-                <input type="date" name="fecha_in" class="form-control"
+                <input type="date" name="fecha_in" id="fecha_in" class="form-control"
                        value="{{ obras.fecha_inicio|date:'Y-m-d' }}" readonly>
                 <small class="text-muted">No puede modificarse.</small>
               </div>
@@ -105,17 +105,23 @@ $.validator.addMethod("greaterThan", function(value, element, param) {
   return !isNaN(startDate) && !isNaN(endDate) && endDate > startDate;
 }, "La fecha de fin debe ser posterior a la fecha de inicio");
 
+$.validator.addMethod("dateISO", function(value, element) {
+  return this.optional(element) || /^\d{4}-\d{2}-\d{2}$/.test(value);
+}, "Formato de fecha inválido");
+
+/* Incluir campos readonly en la validación */
 $("#form_edit_obra").validate({
+  ignore: "",
   rules: {
     nombre      : { required: true, minlength: 3, maxlength: 50 },
     descripcion : { required: true, minlength: 5 },
-    fecha_fin   : { required: true, date: true, greaterThan: "[name='fecha_in']" },
+    fecha_fin   : { required: true, dateISO: true, greaterThan: "#fecha_in" },
     presupuesto : { min: 0, number: true }
   },
   messages: {
     nombre      : { required: "El nombre es obligatorio", minlength: "Mínimo 3 caracteres" },
     descripcion : { required: "La descripción es obligatoria" },
-    fecha_fin   : { required: "Seleccione la fecha fin", date: "Formato inválido", greaterThan: "Debe ser posterior a la fecha de inicio" },
+    fecha_fin   : { required: "Seleccione la fecha de fin", greaterThan: "La fecha fin debe ser posterior a la fecha de inicio" },
     presupuesto : { min: "No puede ser negativo", number: "Número inválido" }
   },
   errorClass: "text-danger small", errorElement: "div",
