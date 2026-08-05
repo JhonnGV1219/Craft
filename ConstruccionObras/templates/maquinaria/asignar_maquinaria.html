@@ -2,10 +2,7 @@
 {% block contenido %}
 
 <style>
-  /* ── layout ── */
   .panel-pool { position: sticky; top: 80px; }
-
-  /* ── pool ── */
   #pool-disponible {
     min-height: 90px;
     border: 2px solid #198754;
@@ -13,8 +10,6 @@
     padding: 8px;
     background: #f0fdf4;
   }
-
-  /* ── zona de drop ── */
   .frente-drop {
     min-height: 100px;
     border: 2px dashed #adb5bd;
@@ -28,8 +23,6 @@
     border-color: #0d6efd;
     border-style: solid;
   }
-
-  /* ── tarjeta ── */
   .maq-card {
     display: flex;
     align-items: center;
@@ -42,13 +35,13 @@
     cursor: grab;
     user-select: none;
     box-shadow: 0 1px 4px rgba(0,0,0,.08);
-    transition: opacity .15s, box-shadow .15s;
+    transition: opacity .15s;
   }
-  .maq-card.dragging    { opacity: .35; cursor: grabbing; }
-  .maq-card.pendiente   { border-left: 4px solid #ffc107; }
-  .maq-card.no-drag     { cursor: default; opacity: .6; }
-  .btn-guardar-asign    { display: none; }
-  .placeholder-txt      { pointer-events: none; }
+  .maq-card.dragging  { opacity: .35; cursor: grabbing; }
+  .maq-card.pendiente { border-left: 4px solid #ffc107; }
+  .maq-card.no-drag   { cursor: default; opacity: .6; }
+  .btn-guardar-asign  { display: none; }
+  .placeholder-txt    { pointer-events: none; }
 </style>
 
 <br><br><br><br><br>
@@ -59,7 +52,8 @@
     <i class="bi bi-arrows-move"></i> Asignación de Maquinaria a Frentes de Trabajo
   </h1>
   <p class="text-center text-muted mb-3">
-    Arrastra una o varias máquinas al frente (obra) y pulsa <strong>Guardar asignación</strong>.
+    Arrastra una o varias máquinas al frente (obra), selecciona el hito y pulsa
+    <strong>Guardar asignación</strong>.
   </p>
 
   {% if request.GET.ok %}
@@ -71,11 +65,10 @@
 
   <div class="row">
 
-    <!-- ══ Columna izquierda ══ -->
+    <!-- ══ Pool disponible ══ -->
     <div class="col-lg-3 col-md-4 mb-4">
       <div class="panel-pool">
 
-        <!-- Pool disponible -->
         <div class="card shadow-sm mb-3">
           <div class="card-header bg-success text-white d-flex
                        justify-content-between align-items-center">
@@ -107,7 +100,6 @@
           </div>
         </div>
 
-        <!-- En uso (referencia) -->
         {% if en_uso %}
         <div class="card shadow-sm">
           <div class="card-header bg-secondary text-white">
@@ -121,6 +113,7 @@
                 <div class="fw-semibold" style="font-size:.88rem;">{{ m.nombre_maquinaria }}</div>
                 <small class="text-muted">
                   {% if m.obra_id %}{{ m.obra_id.nombre_obra }}{% else %}Sin obra{% endif %}
+                  {% if m.id_hito %} · {{ m.id_hito.nombre_hito }}{% endif %}
                 </small>
               </div>
               <span class="badge bg-secondary" style="font-size:.68rem;">En uso</span>
@@ -130,13 +123,12 @@
         </div>
         {% endif %}
 
-      </div><!-- /panel-pool -->
+      </div>
     </div>
 
-    <!-- ══ Columna derecha: frentes ══ -->
+    <!-- ══ Frentes de obra ══ -->
     <div class="col-lg-9 col-md-8">
       <div class="row">
-
         {% for obra in obras %}
         <div class="col-xl-4 col-md-6 mb-4">
           <div class="card shadow-sm h-100">
@@ -148,13 +140,14 @@
               </span>
               <span class="badge flex-shrink-0
                 {% if obra.estado == 'En ejecucion' %}bg-warning text-dark
-                {% elif obra.estado == 'Planificada'%}bg-info text-dark
+                {% elif obra.estado == 'Planificada' %}bg-info text-dark
                 {% else %}bg-secondary{% endif %}">
                 {{ obra.estado }}
               </span>
             </div>
 
             <div class="card-body p-2">
+              <!-- Zona de drop -->
               <div class="frente-drop"
                    id="drop-{{ obra.id_obra }}"
                    data-obra-id="{{ obra.id_obra }}">
@@ -170,7 +163,21 @@
                     id="form-{{ obra.id_obra }}">
                 {% csrf_token %}
                 <input type="hidden" name="obra_id" value="{{ obra.id_obra }}">
+                <!-- inputs de maquinaria se inyectan por JS -->
                 <div class="maq-inputs"></div>
+
+                <!-- Select de hito (inicialmente oculto) -->
+                <div class="mb-2 hito-select-wrapper" style="display:none;">
+                  <label class="form-label fw-semibold small mb-1">
+                    <i class="bi bi-flag me-1"></i>Hito de esta obra <span class="text-danger">*</span>
+                  </label>
+                  <select name="hito_id" class="form-select form-select-sm hito-select"
+                          data-obra-id="{{ obra.id_obra }}">
+                    <option value="">— Seleccione un hito —</option>
+                  </select>
+                  <small class="text-muted">La maquinaria quedará vinculada a este hito.</small>
+                </div>
+
                 <button type="submit"
                         class="btn btn-primary btn-sm w-100 btn-guardar-asign">
                   <i class="bi bi-floppy"></i> Guardar asignación
@@ -187,24 +194,25 @@
           </div>
         </div>
         {% endfor %}
-
       </div>
     </div>
 
   </div>
 </div>
 
+<!-- Hitos por obra en JSON para poblar los selects -->
 <script>
-/* ═══════════════════════════════════════════════════════
-   Drag & Drop con HTML5 nativo
-   (evita conflictos jQuery 1.12 + jQuery UI + Bootstrap)
-═══════════════════════════════════════════════════════ */
+var hitosPorObra = {{ hitos_por_obra|safe }};
+</script>
 
-let dragId    = null;   // id de la máquina que se está arrastrando
-let dragNombre = '';
-let dragTipo   = '';
+<script>
+/* ═══════════════════════════════════════════════
+   Drag & Drop HTML5 nativo
+═══════════════════════════════════════════════ */
+var dragId     = null;
+var dragNombre = '';
+var dragTipo   = '';
 
-/* ── Activa los listeners en una tarjeta ── */
 function bindDrag(el) {
   el.setAttribute('draggable', 'true');
   el.addEventListener('dragstart', function(e) {
@@ -212,7 +220,7 @@ function bindDrag(el) {
     dragNombre = this.dataset.nombre;
     dragTipo   = this.dataset.tipo || '';
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', dragId);   // requerido en Firefox
+    e.dataTransfer.setData('text/plain', dragId);
     setTimeout(() => this.classList.add('dragging'), 0);
   });
   el.addEventListener('dragend', function() {
@@ -220,7 +228,6 @@ function bindDrag(el) {
   });
 }
 
-/* Bind inicial en tarjetas del pool */
 document.querySelectorAll('#pool-disponible .maq-card').forEach(bindDrag);
 
 /* ── Zonas de drop ── */
@@ -233,39 +240,34 @@ document.querySelectorAll('.frente-drop').forEach(function(zona) {
   });
 
   zona.addEventListener('dragleave', function(e) {
-    /* solo quitar highlight si salimos del contenedor */
-    if (!this.contains(e.relatedTarget)) {
-      this.classList.remove('drag-over');
-    }
+    if (!this.contains(e.relatedTarget)) this.classList.remove('drag-over');
   });
 
   zona.addEventListener('drop', function(e) {
     e.preventDefault();
     this.classList.remove('drag-over');
-
     if (!dragId) return;
 
     const obraId = this.dataset.obraId;
 
-    /* Evitar duplicado en la misma zona */
+    // Evitar duplicado
     if (this.querySelector('[data-id="' + dragId + '"]')) return;
 
-    /* Quitar tarjeta original de donde estaba */
+    // Quitar del lugar anterior
     const original = document.getElementById('maq-' + dragId);
     if (original) original.remove();
 
-    /* Ocultar placeholder */
+    // Ocultar placeholder
     const ph = this.querySelector('.placeholder-txt');
     if (ph) ph.style.display = 'none';
 
-    /* Crear tarjeta en la zona destino */
+    // Crear tarjeta en la zona
     const card = document.createElement('div');
-    card.className = 'maq-card pendiente';
-    card.id        = 'maq-' + dragId;
-    card.dataset.id     = dragId;
-    card.dataset.nombre = dragNombre;
-    card.dataset.tipo   = dragTipo;
-    card.setAttribute('draggable', 'true');
+    card.className        = 'maq-card pendiente';
+    card.id               = 'maq-' + dragId;
+    card.dataset.id       = dragId;
+    card.dataset.nombre   = dragNombre;
+    card.dataset.tipo     = dragTipo;
     card.innerHTML =
       '<i class="bi bi-truck-front text-primary fs-5"></i>' +
       '<div class="flex-grow-1">' +
@@ -274,82 +276,40 @@ document.querySelectorAll('.frente-drop').forEach(function(zona) {
       '</div>' +
       '<span class="badge bg-warning text-dark me-1" style="font-size:.68rem;">Por guardar</span>' +
       '<button type="button" class="btn btn-link btn-sm text-danger p-0 btn-quitar"' +
-              ' data-id="' + dragId + '" title="Quitar de esta obra">' +
+              ' data-id="' + dragId + '" title="Quitar">' +
         '<i class="bi bi-x-circle-fill"></i>' +
       '</button>';
 
     bindDrag(card);
     this.appendChild(card);
 
-    /* Registrar en el formulario de esta obra */
-    const form    = document.getElementById('form-' + obraId);
-    const inputs  = form.querySelector('.maq-inputs');
-    const exists  = inputs.querySelector('input[value="' + dragId + '"]');
-    if (!exists) {
+    // Input hidden en el form
+    const form   = document.getElementById('form-' + obraId);
+    const inputs = form.querySelector('.maq-inputs');
+    if (!inputs.querySelector('input[value="' + dragId + '"]')) {
       const inp  = document.createElement('input');
       inp.type   = 'hidden';
       inp.name   = 'maquinaria_ids[]';
       inp.value  = dragId;
       inputs.appendChild(inp);
     }
-    form.querySelector('.btn-guardar-asign').style.display = 'block';
 
-    /* Actualizar contador del pool */
+    // Poblar y mostrar el select de hitos de esta obra
+    poblarHitos(obraId);
+
+    form.querySelector('.btn-guardar-asign').style.display = 'block';
     actualizarContador();
     dragId = null;
   });
 });
 
-/* ── Pool acepta tarjetas de vuelta ── */
+/* ── Pool acepta de vuelta ── */
 const pool = document.getElementById('pool-disponible');
-pool.addEventListener('dragover', function(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-});
+pool.addEventListener('dragover', function(e) { e.preventDefault(); });
 pool.addEventListener('drop', function(e) {
   e.preventDefault();
   if (!dragId) return;
-
-  /* Si venía de una zona, limpiar el input de esa forma */
-  const original = document.getElementById('maq-' + dragId);
-  if (original) {
-    const zona = original.closest('.frente-drop');
-    if (zona) {
-      const obraId = zona.dataset.obraId;
-      const form   = document.getElementById('form-' + obraId);
-      const inp    = form.querySelector('input[value="' + dragId + '"]');
-      if (inp) inp.remove();
-      if (!form.querySelector('.maq-inputs input')) {
-        form.querySelector('.btn-guardar-asign').style.display = 'none';
-      }
-      if (!zona.querySelector('.maq-card')) {
-        zona.querySelector('.placeholder-txt').style.display = '';
-      }
-    }
-    original.remove();
-  }
-
-  /* Reconstruir tarjeta para el pool */
-  const back = document.createElement('div');
-  back.className = 'maq-card';
-  back.id        = 'maq-' + dragId;
-  back.dataset.id     = dragId;
-  back.dataset.nombre = dragNombre;
-  back.dataset.tipo   = dragTipo;
-  back.innerHTML =
-    '<i class="bi bi-truck-front text-success fs-5"></i>' +
-    '<div class="flex-grow-1">' +
-      '<div class="fw-semibold" style="font-size:.88rem;">' + dragNombre + '</div>' +
-      '<small class="text-muted">' + dragTipo + '</small>' +
-    '</div>' +
-    '<span class="badge bg-success" style="font-size:.68rem;">Disponible</span>';
-
-  bindDrag(back);
-  const msgVacio = document.getElementById('msg-vacio');
-  if (msgVacio) msgVacio.remove();
-  pool.appendChild(back);
-
-  actualizarContador();
+  devolverAlPool(dragId, dragNombre, dragTipo);
   dragId = null;
 });
 
@@ -358,8 +318,8 @@ document.addEventListener('click', function(e) {
   const btn = e.target.closest('.btn-quitar');
   if (!btn) return;
 
-  const id    = btn.dataset.id;
-  const card  = document.getElementById('maq-' + id);
+  const id   = btn.dataset.id;
+  const card = document.getElementById('maq-' + id);
   if (!card) return;
 
   const nombre = card.dataset.nombre;
@@ -368,23 +328,26 @@ document.addEventListener('click', function(e) {
   const obraId = zona.dataset.obraId;
   const form   = document.getElementById('form-' + obraId);
 
-  /* Quitar input hidden */
   const inp = form.querySelector('input[value="' + id + '"]');
   if (inp) inp.remove();
-  if (!form.querySelector('.maq-inputs input')) {
-    form.querySelector('.btn-guardar-asign').style.display = 'none';
-  }
 
   card.remove();
 
   if (!zona.querySelector('.maq-card')) {
     zona.querySelector('.placeholder-txt').style.display = '';
+    // Ocultar select de hito si no quedan máquinas
+    form.querySelector('.hito-select-wrapper').style.display = 'none';
+    form.querySelector('.btn-guardar-asign').style.display   = 'none';
   }
 
-  /* Devolver al pool */
+  devolverAlPool(id, nombre, tipo);
+});
+
+/* ── Helpers ── */
+function devolverAlPool(id, nombre, tipo) {
   const back = document.createElement('div');
-  back.className = 'maq-card';
-  back.id        = 'maq-' + id;
+  back.className      = 'maq-card';
+  back.id             = 'maq-' + id;
   back.dataset.id     = id;
   back.dataset.nombre = nombre;
   back.dataset.tipo   = tipo;
@@ -401,9 +364,27 @@ document.addEventListener('click', function(e) {
   if (mv) mv.remove();
   pool.appendChild(back);
   actualizarContador();
-});
+}
 
-/* ── Contador ── */
+function poblarHitos(obraId) {
+  const hitos  = hitosPorObra[obraId] || [];
+  const form   = document.getElementById('form-' + obraId);
+  const sel    = form.querySelector('.hito-select');
+  const wrapper = form.querySelector('.hito-select-wrapper');
+
+  // Limpiar y re-poblar
+  sel.innerHTML = '<option value="">— Seleccione un hito —</option>';
+  hitos.forEach(function(h) {
+    const opt   = document.createElement('option');
+    opt.value   = h.id_hito;
+    opt.textContent = h.nombre_hito;
+    sel.appendChild(opt);
+  });
+
+  // Mostrar el wrapper
+  wrapper.style.display = hitos.length > 0 ? 'block' : 'none';
+}
+
 function actualizarContador() {
   document.getElementById('cnt-disp').textContent =
     pool.querySelectorAll('.maq-card').length;

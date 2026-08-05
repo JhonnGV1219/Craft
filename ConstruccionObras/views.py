@@ -547,25 +547,36 @@ def dashboard(request):
 ## Asignacion de maquinaria a frentes de trabajo (drag & drop)
 def asignar_maquinaria(request):
     maquinaria_disponible = Maquinaria_Pesada.objects.filter(estado='disponible')
-    maquinaria_en_uso = Maquinaria_Pesada.objects.filter(estado='en_uso')
+    maquinaria_en_uso     = Maquinaria_Pesada.objects.filter(estado='en_uso')
     obras = Obra.objects.exclude(estado='Finalizada')
+
+    # Hitos agrupados por obra para pasarlos al template como JSON
+    import json
+    hitos_por_obra = {}
+    for obra in obras:
+        hitos_obra = Hitos.objects.filter(obra_id=obra).values('id_hito', 'nombre_hito')
+        hitos_por_obra[str(obra.id_obra)] = list(hitos_obra)
+
     return render(request, 'maquinaria/asignar_maquinaria.html', {
-        'disponible': maquinaria_disponible,
-        'en_uso': maquinaria_en_uso,
-        'obras': obras,
+        'disponible'     : maquinaria_disponible,
+        'en_uso'         : maquinaria_en_uso,
+        'obras'          : obras,
+        'hitos_por_obra' : json.dumps(hitos_por_obra),
     })
 
 
 def guardar_asignacion_maquinaria(request):
     if request.method == 'POST':
         maquinaria_ids = request.POST.getlist('maquinaria_ids[]')
-        obra_id = request.POST.get('obra_id')
+        obra_id  = request.POST.get('obra_id')
+        hito_id  = request.POST.get('hito_id') or None
         if obra_id and maquinaria_ids:
             for mid in maquinaria_ids:
                 try:
                     m = Maquinaria_Pesada.objects.get(id_maquinaria=int(mid))
                     m.obra_id_id = int(obra_id)
-                    m.estado = 'en_uso'
+                    m.id_hito_id = int(hito_id) if hito_id else None
+                    m.estado     = 'en_uso'
                     m.save()
                 except Maquinaria_Pesada.DoesNotExist:
                     pass
