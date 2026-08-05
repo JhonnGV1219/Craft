@@ -45,9 +45,9 @@
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label fw-semibold">Hito asociado</label>
+                                <label class="form-label fw-semibold">Obra asociado</label>
                                 <select name="hito" id="campo-hito" class="form-select" required>
-                                    <option value="" disabled selected>— Seleccione un hito —</option>
+                                    <option value="" disabled selected>— Seleccione una Obra —</option>
                                     {% for h in hitos %}
                                     <option value="{{ h.id_hito }}">
                                         {{ h.nombre_hito }} — {{ h.obra_id.nombre_obra }}
