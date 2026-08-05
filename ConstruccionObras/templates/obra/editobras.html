@@ -97,12 +97,13 @@ $("#plano").fileinput({
 });
 $(".fileinput-upload").hide();
 
-/* La fecha de inicio es readonly pero su valor está disponible para comparar */
 $.validator.addMethod("greaterThan", function(value, element, param) {
-  var start = $(param).val();
-  if (!start || !value) return true;
-  return value > start;
-}, "Debe ser posterior a la fecha de inicio");
+  var startVal = $(param).val();
+  if (!startVal || !value) return true;
+  var startDate = new Date(startVal);
+  var endDate   = new Date(value);
+  return !isNaN(startDate) && !isNaN(endDate) && endDate > startDate;
+}, "La fecha de fin debe ser posterior a la fecha de inicio");
 
 $("#form_edit_obra").validate({
   rules: {
