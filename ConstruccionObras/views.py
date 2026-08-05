@@ -21,7 +21,34 @@ def showobras(request):
                   {'misobras':obras})
 
 def calendario_obras(request):
-    return render(request, 'obra/eventos_obras.html')
+    obras = Obra.objects.all()
+    eventos = []
+    for obra in obras:
+        from datetime import timedelta
+        # FullCalendar end es exclusivo, sumamos 1 día para que el último día sea visible
+        fecha_fin_display = obra.fecha_fin_estimado + timedelta(days=1)
+        eventos.append({
+            'id'    : obra.id_obra,
+            'title' : obra.nombre_obra,
+            'start' : obra.fecha_inicio.strftime('%Y-%m-%d'),
+            'end'   : fecha_fin_display.strftime('%Y-%m-%d'),
+            'color' : (
+                '#198754' if obra.estado == 'Finalizada'
+                else '#0d6efd' if obra.estado == 'Planificada'
+                else '#6c757d' if obra.estado == 'Suspendida'
+                else '#fd7e14'
+            ),
+            'extendedProps': {
+                'descripcion': obra.descripcion,
+                'presupuesto': str(obra.presupuesto_total) if obra.presupuesto_total else 'Sin definir',
+                'estado'     : obra.estado,
+                'fecha_fin'  : obra.fecha_fin_estimado.strftime('%Y-%m-%d'),
+            }
+        })
+    import json
+    return render(request, 'obra/eventos_obras.html', {
+        'eventos_json': json.dumps(eventos, ensure_ascii=False)
+    })
 
 def guardar_obra(request):
     try:
