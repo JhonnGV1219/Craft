@@ -88,15 +88,19 @@ $("#plano").fileinput({
 });
 $(".fileinput-upload").hide();
 
+/* Regla personalizada: fecha fin > fecha inicio */
+$.validator.addMethod("greaterThan", function(value, element, param) {
+  var start = $(param).val();
+  if (!start || !value) return true;
+  return value > start;
+}, "Debe ser posterior a la fecha de inicio");
+
 $("#form_obra").validate({
   rules: {
     nombre      : { required: true, minlength: 3, maxlength: 50 },
     descripcion : { required: true, minlength: 5 },
     fecha_in    : { required: true, date: true },
-    fecha_fin   : {
-      required: true, date: true,
-      greaterThan: "#fecha_in"
-    },
+    fecha_fin   : { required: true, date: true, greaterThan: "#fecha_in" },
     presupuesto : { min: 0, number: true }
   },
   messages: {
@@ -111,12 +115,5 @@ $("#form_obra").validate({
   highlight: function(el){ $(el).addClass("is-invalid"); },
   unhighlight: function(el){ $(el).removeClass("is-invalid"); }
 });
-
-/* Regla personalizada: fecha fin > fecha inicio */
-$.validator.addMethod("greaterThan", function(value, element, param) {
-  var start = $(param).val();
-  if (!start || !value) return true;
-  return value > start;
-}, "Debe ser posterior a la fecha de inicio");
 </script>
 {% endblock %}

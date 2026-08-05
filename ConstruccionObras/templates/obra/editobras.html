@@ -97,17 +97,24 @@ $("#plano").fileinput({
 });
 $(".fileinput-upload").hide();
 
+/* La fecha de inicio es readonly pero su valor está disponible para comparar */
+$.validator.addMethod("greaterThan", function(value, element, param) {
+  var start = $(param).val();
+  if (!start || !value) return true;
+  return value > start;
+}, "Debe ser posterior a la fecha de inicio");
+
 $("#form_edit_obra").validate({
   rules: {
     nombre      : { required: true, minlength: 3, maxlength: 50 },
     descripcion : { required: true, minlength: 5 },
-    fecha_fin   : { required: true, date: true },
+    fecha_fin   : { required: true, date: true, greaterThan: "[name='fecha_in']" },
     presupuesto : { min: 0, number: true }
   },
   messages: {
     nombre      : { required: "El nombre es obligatorio", minlength: "Mínimo 3 caracteres" },
     descripcion : { required: "La descripción es obligatoria" },
-    fecha_fin   : { required: "Seleccione la fecha fin", date: "Formato inválido" },
+    fecha_fin   : { required: "Seleccione la fecha fin", date: "Formato inválido", greaterThan: "Debe ser posterior a la fecha de inicio" },
     presupuesto : { min: "No puede ser negativo", number: "Número inválido" }
   },
   errorClass: "text-danger small", errorElement: "div",
