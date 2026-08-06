@@ -1,4 +1,4 @@
-{% load static %}
+{% load static pwa %}
 
 
 <!doctype html>
@@ -9,7 +9,7 @@
         <title>Construction HTML-5 Template</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="manifest" href="site.webmanifest">
+        {% progressive_web_app_meta %}
 		<link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.ico">
 
 		<!-- CSS here -->
@@ -165,9 +165,13 @@
                                     </nav>
                                 </div>
                             </div>             
+                            <!--Boton de descarga-->
                             <div class="col-xl-2 col-lg-2 col-md-3">
                                 <div class="header-right-btn f-right d-none d-lg-block">
                                     <a href="https://wa.me/958819382" class="btn whatsapp-btn" target="_blank">Contactanos Ahora</a>
+                                    <button id="btn-instalar-apk" style="display:none;" class="btn whatsapp-btn">
+                                        📲 Descargar APK
+                                    </button>
                                 </div>
                             </div>
                             <!-- Mobile Menu -->
@@ -334,6 +338,27 @@
 		<!-- Jquery Plugins, main Jquery -->	
         <script src="{% static './assets/js/plugins.js' %}"></script>
         <script src="{% static './assets/js/main.js' %}"></script>
+        <script>
+        let deferredPrompt;
+        const btnInstalar = document.getElementById('btn-instalar-apk');
 
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            btnInstalar.style.display = 'inline-block';
+        });
+
+        btnInstalar.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            btnInstalar.style.display = 'none';
+        });
+
+        window.addEventListener('appinstalled', () => {
+            btnInstalar.style.display = 'none';
+        });
+        </script>
     </body>
 </html>

@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ConstruccionObras'
+    'ConstruccionObras',
+    'pwa'
 ]
 
 MIDDLEWARE = [
@@ -128,6 +129,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS=(os.path.join(BASE_DIR,'CrafteosSA/static'),)
+PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'CrafteosSA/static', 'sw.js')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -137,3 +139,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL='/media/'
 MEDIA_ROOT=(os.path.join(BASE_DIR,'CrafteosSA/media'))
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+PWA_APP_NAME = 'CrafteosSA'
+PWA_APP_DESCRIPTION = "Gestión de Construcción de Obras"
+PWA_APP_THEME_COLOR = '#000000'
+PWA_APP_BACKGROUND_COLOR = '#ffffff'
+PWA_APP_DISPLAY = 'standalone'
+PWA_APP_SCOPE = '/'
+PWA_APP_ORIENTATION = 'any'
+PWA_APP_START_URL = '/'
+PWA_APP_STATUS_BAR_COLOR = 'default'
+PWA_APP_ICONS = [
+    {
+        'src': '/static/images/icono_pwa.png',
+        'sizes': '512x512'
+    }
+]
+PWA_APP_DIR = 'ltr'
+PWA_APP_LANG = 'es-MX'
