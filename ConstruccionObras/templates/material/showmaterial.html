@@ -1,45 +1,64 @@
 {% extends "principal/plantillaPrincipal.html" %}
 {% block contenido %}
+
 <br><br><br><br><br>
-<div class="container">
-    <h1 class="text-center">Listado de Materiales</h1>
-    <hr>
 
-    <div class="text-end mb-3">
-        <a href="/newmaterial/" class="btn btn-primary">Nuevo Material</a>
+<div class="container-fluid px-3 px-md-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-0"><i class="bi bi-box-seam me-2"></i>Catálogo de Materiales</h2>
+            <small class="text-muted">Materiales disponibles para asignación a obras</small>
+        </div>
+        <a href="/newmaterial/" class="btn btn-success btn-sm">
+            <i class="bi bi-plus-circle"></i> Nuevo Material
+        </a>
     </div>
+    <hr class="mt-0">
 
-    <table class="table table-bordered table-striped text-center" id="tbl_materiales">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Unidad</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for m in material %}
-            <tr>
-                <td>{{ m.id_material }}</td>
-                <td>{{ m.nombre }}</td>
-                <td>{{ m.unidad }}</td>
-                <td>
-                    <a href="/updatematerial/{{m.id_material}}" class="btn btn-warning btn-sm">Editar</a>
-                    <a href="/deletematerial/{{m.id_material}}" class="btn btn-danger btn-sm">Eliminar</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered table-striped align-middle"
+               id="tbl_materiales">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Unidad</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in material %}
+                <tr>
+                    <td class="text-center fw-bold">{{ m.id_material }}</td>
+                    <td class="fw-semibold">{{ m.nombre }}</td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary">{{ m.unidad }}</span>
+                    </td>
+                    <td class="text-center" style="white-space:nowrap;">
+                        <a href="/updatematerial/{{ m.id_material }}"
+                           class="btn btn-warning btn-sm" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="/deletematerial/{{ m.id_material }}"
+                           class="btn btn-danger btn-sm"
+                           onclick="confirmacion(event, this.href)"
+                           title="Eliminar">
+                            <i class="bi bi-trash3"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
+
 <script>
 new DataTable('#tbl_materiales', {
-    layout: {
-        topStart: {
-            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
-        }
-    }
+    layout: { topStart: { buttons: ['copy','csv','excel','pdf','print'] } },
+    order: [[0,'asc']],
+    columnDefs: [{ orderable: false, targets: [3] }]
 });
 </script>
 {% endblock %}

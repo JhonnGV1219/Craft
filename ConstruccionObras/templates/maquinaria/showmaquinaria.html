@@ -3,82 +3,89 @@
 
 <br><br><br><br><br>
 
-<center>
-    <h1>Maquinaria Registrada</h1>
-    <br>
-    <a class="btn btn-success" href="/newmaquinaria/">
-        <i class="bi bi-plus-circle"></i> Nueva Maquinaria
-    </a>
-</center>
+<div class="container-fluid px-3 px-md-4">
 
-<br><br>
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-0"><i class="bi bi-truck me-2"></i>Maquinaria Registrada</h2>
+            <small class="text-muted">Equipo pesado y su asignación por obra</small>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary btn-sm" href="/asignar_maquinaria/">
+                <i class="bi bi-arrows-move"></i> Asignar
+            </a>
+            <a class="btn btn-success btn-sm" href="/newmaquinaria/">
+                <i class="bi bi-plus-circle"></i> Nueva Maquinaria
+            </a>
+        </div>
+    </div>
+    <hr class="mt-0">
 
-<div class="container">
-    <table id="tbl_maquinaria" class="table table-hover table-striped table-bordered">
-
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Tipo</th>
-                <th>Estado</th>
-                <th>Imagen</th>
-                <th>Obra</th>
-                <th>Hito</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {% for m in maquinaria %}
-            <tr>
-                <td>{{ m.nombre_maquinaria }}</td>
-                <td>{{ m.tipo_maquinaria }}</td>
-                <td>{{ m.estado }}</td>
-                <td>
-                    {% if m.imagen %}
-                        <img src="{{ m.imagen.url }}" width="80">
-                    {% endif %}
-                </td>
-                <td>{% if m.obra_id %}
-                        {{ m.obra_id.nombre_obra }}
-                    {% else %}
-                        Sin asignar
-                    {% endif %}
+    <div class="table-responsive">
+        <table id="tbl_maquinaria" class="table table-hover table-striped table-bordered align-middle">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>Imagen</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Obra</th>
+                    <th>Hito</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in maquinaria %}
+                <tr>
+                    <td class="text-center">
+                        {% if m.imagen %}
+                            <img src="{{ m.imagen.url }}"
+                                 style="width:56px;height:56px;object-fit:cover;border-radius:6px;">
+                        {% else %}
+                            <span class="text-muted"><i class="bi bi-image fs-4"></i></span>
+                        {% endif %}
                     </td>
-                <td>
-                    {% if m.id_hito %}
-                        {{ m.id_hito.nombre_hito }}
-                    {% else %}
-                        Sin asignar
-                    {% endif %}
-                </td>
-
-                <td class="text-center">
-                    <a href="/updatemaquinaria/{{ m.id_maquinaria }}" class="btn btn-warning">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-
-                    <a href="/deletemaquinaria/{{ m.id_maquinaria }}"
-                       class="btn btn-danger"
-                       onclick="confirmacion(event, this.href)">
-                        <i class="bi bi-trash"></i>
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-
-    </table>
+                    <td class="fw-semibold">{{ m.nombre_maquinaria }}</td>
+                    <td>{{ m.tipo_maquinaria }}</td>
+                    <td class="text-center">
+                        <span class="badge
+                            {% if m.estado == 'disponible' %}bg-success
+                            {% elif m.estado == 'en_uso' %}bg-warning text-dark
+                            {% else %}bg-secondary{% endif %}">
+                            {{ m.get_estado_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if m.obra_id %}{{ m.obra_id.nombre_obra }}
+                        {% else %}<span class="text-muted small">Sin asignar</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if m.id_hito %}{{ m.id_hito.nombre_hito }}
+                        {% else %}<span class="text-muted small">Sin asignar</span>{% endif %}
+                    </td>
+                    <td class="text-center" style="white-space:nowrap;">
+                        <a href="/updatemaquinaria/{{ m.id_maquinaria }}"
+                           class="btn btn-warning btn-sm" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="/deletemaquinaria/{{ m.id_maquinaria }}"
+                           class="btn btn-danger btn-sm"
+                           onclick="confirmacion(event, this.href)"
+                           title="Eliminar">
+                            <i class="bi bi-trash3"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
 new DataTable('#tbl_maquinaria', {
-    layout: {
-        topStart: {
-            buttons: ['copy', 'csv', 'excel', 'pdf', 'print']
-        }
-    }
+    layout: { topStart: { buttons: ['copy','csv','excel','pdf','print'] } },
+    columnDefs: [{ orderable: false, targets: [0,6] }]
 });
 </script>
-
 {% endblock %}
