@@ -335,70 +335,145 @@
 		<!-- Jquery Plugins, main Jquery -->	
         <script src="{% static './assets/js/plugins.js' %}"></script>
         <script src="{% static './assets/js/main.js' %}"></script>
-        <!-- ══ Botón flotante PWA (aparece al hacer scroll) ══ -->
+        <!-- ══ Botón fijo PWA — esquina inferior izquierda ══ -->
         <div id="pwa-fab" style="
-            display:none; position:fixed; bottom:32px; right:28px;
-            z-index:9999; animation:fab-entrada .4s ease;">
+            position: fixed;
+            bottom: 28px;
+            left: 24px;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            gap: 0;">
 
-            <button onclick="instalarPWA()" style="
-                background:linear-gradient(135deg,#ffc107,#ff9800);
-                color:#1a1a2e; font-weight:700; font-size:.9rem;
-                border:none; border-radius:50px; padding:14px 24px;
-                box-shadow:0 6px 20px rgba(255,152,0,.55); cursor:pointer;
-                display:flex; align-items:center; gap:8px;
-                transition:transform .15s, box-shadow .15s; white-space:nowrap;"
-                onmouseover="this.style.transform='scale(1.06)';this.style.boxShadow='0 8px 28px rgba(255,152,0,.75)'"
-                onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 6px 20px rgba(255,152,0,.55)'">
-                <span style="font-size:1.25rem;">📲</span> Descargar App
+            <button id="btn-pwa-main" onclick="instalarPWA()" style="
+                background: linear-gradient(135deg, #ffc107, #ff9800);
+                color: #1a1a2e;
+                font-weight: 700;
+                font-size: .88rem;
+                border: none;
+                border-radius: 50px;
+                padding: 13px 22px;
+                box-shadow: 0 6px 22px rgba(255,152,0,.6);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap;
+                transition: transform .15s, box-shadow .15s;">
+                <span style="font-size:1.2rem;">📲</span>
+                <span>Descargar App</span>
             </button>
 
             <button onclick="document.getElementById('pwa-fab').style.display='none'" style="
-                position:absolute; top:-8px; right:-8px;
-                width:22px; height:22px; border-radius:50%;
-                background:#dc3545; color:#fff; border:none;
-                font-size:.65rem; cursor:pointer; line-height:1;
-                display:flex; align-items:center; justify-content:center;
-                box-shadow:0 2px 6px rgba(0,0,0,.3);" title="Cerrar">✕</button>
+                margin-left: 6px;
+                width: 24px; height: 24px;
+                border-radius: 50%;
+                background: #6c757d;
+                color: #fff;
+                border: none;
+                font-size: .65rem;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 6px rgba(0,0,0,.25);
+                flex-shrink: 0;" title="Ocultar">✕</button>
         </div>
 
-        <style>
-        @keyframes fab-entrada {
-            from { opacity:0; transform:translateY(30px) scale(.85); }
-            to   { opacity:1; transform:translateY(0) scale(1); }
-        }
-        </style>
+        <!-- Modal instrucciones instalación manual -->
+        <div id="pwa-modal" style="
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.55);
+            z-index: 99998;
+            justify-content: center;
+            align-items: center;">
+            <div style="
+                background: #fff;
+                border-radius: 14px;
+                padding: 28px 30px;
+                max-width: 420px;
+                width: 90%;
+                box-shadow: 0 8px 32px rgba(0,0,0,.25);
+                position: relative;">
+                <h5 style="font-weight:700; margin-bottom:14px;">
+                    📲 Instalar CrafteosSA
+                </h5>
+                <p style="font-size:.9rem; color:#495057; margin-bottom:14px;">
+                    Tu navegador no mostró el diálogo automático.
+                    Puedes instalar la app manualmente:
+                </p>
+                <div style="background:#f8f9fa; border-radius:8px; padding:14px; font-size:.86rem; line-height:1.7;">
+                    <strong>Chrome / Edge (escritorio):</strong><br>
+                    Busca el ícono <b>⊕</b> o <b>↓</b> en la barra de direcciones
+                    y haz clic en <em>"Instalar CrafteosSA"</em>.<br><br>
+                    <strong>Chrome (Android):</strong><br>
+                    Menú ⋮ → <em>"Añadir a pantalla de inicio"</em>.<br><br>
+                    <strong>Safari (iOS):</strong><br>
+                    Botón Compartir → <em>"Agregar a pantalla de inicio"</em>.
+                </div>
+                <div style="text-align:right; margin-top:18px;">
+                    <button onclick="cerrarModalPWA()" style="
+                        background: #1a1a2e; color: #fff;
+                        border: none; border-radius: 8px;
+                        padding: 9px 20px; cursor: pointer;
+                        font-weight: 600; font-size: .88rem;">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <script>
         var deferredPrompt = null;
 
+        /* Capturar el evento nativo si el navegador lo dispara */
         window.addEventListener('beforeinstallprompt', function(e) {
             e.preventDefault();
             deferredPrompt = e;
         });
 
-        window.addEventListener('scroll', function() {
-            var fab = document.getElementById('pwa-fab');
-            if (!fab) return;
-            if (deferredPrompt && window.scrollY > 200) {
-                fab.style.display = 'block';
-            } else {
-                fab.style.display = 'none';
-            }
-        });
-
-        function instalarPWA() {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then(function() {
-                deferredPrompt = null;
-                document.getElementById('pwa-fab').style.display = 'none';
-            });
-        }
-
+        /* Una vez instalada, ocultar el botón */
         window.addEventListener('appinstalled', function() {
             deferredPrompt = null;
             var fab = document.getElementById('pwa-fab');
             if (fab) fab.style.display = 'none';
+        });
+
+        function instalarPWA() {
+            if (deferredPrompt) {
+                /* Caso ideal: el navegador tiene el prompt listo */
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(result) {
+                    deferredPrompt = null;
+                    if (result.outcome === 'accepted') {
+                        document.getElementById('pwa-fab').style.display = 'none';
+                    }
+                });
+            } else {
+                /* Fallback: mostrar instrucciones manuales */
+                document.getElementById('pwa-modal').style.display = 'flex';
+            }
+        }
+
+        function cerrarModalPWA() {
+            document.getElementById('pwa-modal').style.display = 'none';
+        }
+
+        /* Cerrar modal al hacer clic fuera */
+        document.getElementById('pwa-modal').addEventListener('click', function(e) {
+            if (e.target === this) cerrarModalPWA();
+        });
+
+        /* Hover sobre el botón */
+        var btnMain = document.getElementById('btn-pwa-main');
+        btnMain.addEventListener('mouseover', function() {
+            this.style.transform   = 'scale(1.05)';
+            this.style.boxShadow   = '0 8px 28px rgba(255,152,0,.8)';
+        });
+        btnMain.addEventListener('mouseout', function() {
+            this.style.transform   = 'scale(1)';
+            this.style.boxShadow   = '0 6px 22px rgba(255,152,0,.6)';
         });
         </script>
     </body>
